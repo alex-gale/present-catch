@@ -26,38 +26,35 @@ class Game(arcade.Window):
         # initialise game state
         self.current_state = GameState.TITLE_SCREEN
 
-        self.title_screen = TitleScreen(self)
-
-        # button list
-        # self.title_screen_button_list = None
+        # initialise scenes
+        self.scenes = []
 
     def setup(self):
-        pass
-
-    def draw_title_screen(self):
-        ## title screen
-        # draw the title background
-        self.title_screen.draw()
+        # setup scenes
+        title_screen = TitleScreen(self)
+        self.scenes.append(title_screen)
 
 
     def on_draw(self):
         ## main game renderer
         arcade.start_render()
 
-        if self.current_state == GameState.TITLE_SCREEN:
-            self.draw_title_screen()
-
+        state_value = self.current_state.value
+        self.scenes[state_value].draw()
 
     def on_update(self, delta_time):
-        pass
+        state_value = self.current_state.value
+        self.scenes[state_value].update(delta_time)
 
     def on_mouse_press(self, x, y, button, key_modifiers):
         ## check for mouse presses
-        check_mouse_press_for_buttons(x, y, self.title_screen.button_list)
+        state_value = self.current_state.value
+        check_mouse_press_for_buttons(x, y, self.scenes[state_value].button_list)
 
     def on_mouse_release(self, x, y, button, key_modifiers):
         ## check for mouse releases
-        check_mouse_release_for_buttons(x, y, self.title_screen.button_list)
+        state_value = self.current_state.value
+        check_mouse_release_for_buttons(x, y, self.scenes[state_value].button_list)
 
 def main():
     window = Game()
