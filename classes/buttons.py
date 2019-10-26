@@ -28,3 +28,12 @@ class ChangeGameStateButton(ImageButton):
     def on_release(self):
         self.pressed = False
         self.game.change_game_state(self.gamestate)
+
+
+# class GameSelectButton:
+#     def __init__(self, gamestate, game, filename=None, x=0, y=0, title_text="", desc_text=""):
+#         self.HEIGHT = 400
+#         self.WIDTH = 200
+
+#         self.gamestate = gamestate
+#         self.game = game
