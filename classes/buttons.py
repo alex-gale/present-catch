@@ -19,21 +19,12 @@ class ImageButton(arcade.Sprite):
 
 class ChangeGameStateButton(ImageButton):
     # button to change the game state. requires access to the game class
-    def __init__(self, gamestate, game, filename=None, x=0, y=0):
+    def __init__(self, game, gamestate, filename=None, x=0, y=0):
         super().__init__(filename, x, y)
 
-        self.gamestate = gamestate
         self.game = game
+        self.gamestate = gamestate
 
     def on_release(self):
         self.pressed = False
         self.game.change_game_state(self.gamestate)
-
-
-# class GameSelectButton:
-#     def __init__(self, gamestate, game, filename=None, x=0, y=0, title_text="", desc_text=""):
-#         self.HEIGHT = 400
-#         self.WIDTH = 200
-
-#         self.gamestate = gamestate
-#         self.game = game

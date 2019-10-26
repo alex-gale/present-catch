@@ -44,7 +44,7 @@ class Game(arcade.Window):
         super().__init__(self.SCREEN_WIDTH, self.SCREEN_HEIGHT, self.SCREEN_TITLE)
 
         # initialise game state to the title screen
-        self.current_state = GameState.GAME_MENU
+        self.current_state = GameState.TITLE_SCREEN
 
         # initialise scenes
         self.scenes = []
