@@ -1,7 +1,8 @@
 import arcade, enum
 from effects import fade_in, slide_in
-from classes.button import ImageButton, check_mouse_press_for_buttons, check_mouse_release_for_buttons
+from classes.buttons import ImageButton
 from title_screen import TitleScreen
+from game_menu import GameMenu
 
 # store game state constants in Enum
 class GameState(enum.Enum):
@@ -11,6 +12,26 @@ class GameState(enum.Enum):
     PRESENT_SNAP = 3
     PRESENT_MATCH = 4
 
+def check_mouse_press_for_buttons(x, y, button_list):
+    # checks if mouse is over button when clicked
+    for button in button_list:
+        if x > button.center_x + button.width / 2:
+            continue
+        if x < button.center_x - button.width / 2:
+            continue
+        if y > button.center_y + button.height / 2:
+            continue
+        if y < button.center_y - button.height / 2:
+            continue
+
+        button.on_press()
+
+def check_mouse_release_for_buttons(_x, _y, button_list):
+    # checks if mouse is over button when released
+    for button in button_list:
+        if button.pressed:
+            button.on_release()
+
 
 class Game(arcade.Window):
     def __init__(self):
@@ -18,21 +39,34 @@ class Game(arcade.Window):
         self.SCREEN_WIDTH = 800
         self.SCREEN_HEIGHT = 600
         self.SCREEN_TITLE = "Present Catch"
-        self.TITLE_BACKGROUND = "images/mountain.jpg"
 
         # call the init of arcade.Window
         super().__init__(self.SCREEN_WIDTH, self.SCREEN_HEIGHT, self.SCREEN_TITLE)
 
-        # initialise game state
+        # initialise game state to the title screen
         self.current_state = GameState.TITLE_SCREEN
 
         # initialise scenes
         self.scenes = []
 
     def setup(self):
-        # setup scenes
+        ## setup scenes
+        # 0 = title screen
         title_screen = TitleScreen(self)
         self.scenes.append(title_screen)
+
+        # 1 = game menu
+        game_menu = GameMenu(self)
+        self.scenes.append(game_menu)
+
+    def change_game_state(self, newState):
+        # switch the state
+        self.current_state = GameState[newState]
+
+        # get the integer value of the current state
+        state_value = self.current_state.value
+        # setup the new scene
+        self.scenes[state_value].setup()
 
 
     def on_draw(self):

@@ -1,5 +1,5 @@
 import arcade
-from classes.button import ImageButton
+from classes.buttons import ChangeGameStateButton
 from classes.scene import Scene
 from effects import fade_in, slide_in
 
@@ -21,11 +21,8 @@ class TitleScreen(Scene):
         self.santa.center_x = 160
         self.santa.center_y = -200
 
-        # initialise buttons
-        self.button_list = []
-
         # main play button
-        play_button = ImageButton("images/play_button.png", 550, 300)
+        play_button = ChangeGameStateButton("GAME_MENU", self.game, "images/play_button.png", 550, 300)
         play_button.alpha = 0
         self.button_list.append(play_button)
 
