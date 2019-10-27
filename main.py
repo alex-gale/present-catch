@@ -3,6 +3,9 @@ from effects import fade_in, slide_in
 from classes.buttons import ImageButton
 from title_screen import TitleScreen
 from game_menu import GameMenu
+from present_catch import PresentCatch
+from present_snap import PresentSnap
+from present_match import PresentMatch
 
 # store game state constants in Enum
 class GameState(enum.Enum):
@@ -58,6 +61,18 @@ class Game(arcade.Window):
         # 1 = game menu
         game_menu = GameMenu(self)
         self.scenes.append(game_menu)
+
+        # 2 = present catch
+        present_catch = PresentCatch(self)
+        self.scenes.append(present_catch)
+
+        # 3 = present snap
+        present_snap = PresentSnap(self)
+        self.scenes.append(present_snap)
+
+        # 4 = present match
+        present_match = PresentMatch(self)
+        self.scenes.append(present_match)
 
     def change_game_state(self, newState):
         # switch the state
