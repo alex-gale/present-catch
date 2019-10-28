@@ -74,9 +74,10 @@ class Game(arcade.Window):
         present_match = PresentMatch(self)
         self.scenes.append(present_match)
 
-    def change_game_state(self, newState):
+    def change_game_state(self, new_state):
         # switch the state
-        self.current_state = GameState[newState]
+        self.current_state = GameState[new_state]
+        print(new_state)
 
         # get the integer value of the current state
         state_value = self.current_state.value

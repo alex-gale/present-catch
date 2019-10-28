@@ -4,7 +4,7 @@ class Scene:
     def __init__(self, game):
         ## this is run when the scene is initially created
         self.game = game
-        # empty button list by default
+        # buttons added to this list will have click detection
         self.button_list = []
 
     def setup(self):
