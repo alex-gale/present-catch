@@ -18,8 +18,8 @@ class GameSelectButton:
 
         self.alpha = 255
 
-        # set image is one is provided, otherwise grey square
-        if filename != None:
+        # set image if one is provided, otherwise grey square
+        if filename is not None:
             self.image = arcade.load_texture(filename)
             self.image.alpha = self.alpha
         else:
