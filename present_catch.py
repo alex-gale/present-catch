@@ -5,6 +5,9 @@ class PresentCatch(Scene):
     def __init__(self, game):
         super().__init__(game)
 
+        # initialise background
+        self.background = arcade.load_texture("images/present_catch/background.jpg")
+
         # initialise present score
         self.present_count = 25
 
@@ -32,4 +35,8 @@ class PresentCatch(Scene):
             self.ground_list.append(ground)
 
     def draw(self):
+        # draw background
+        arcade.draw_texture_rectangle(self.game.SCREEN_WIDTH // 2, self.game.SCREEN_HEIGHT // 2, self.game.SCREEN_WIDTH, self.game.SCREEN_HEIGHT, self.background)
+
+        # draw ground tiles
         self.ground_list.draw()
