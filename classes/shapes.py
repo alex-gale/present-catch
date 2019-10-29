@@ -1,15 +1,19 @@
-class BorderRadiusRectangle:
-    def __init__(self, center, dimensions, colour, border_rad=0, resolution=1):
-        self.center_x = center[0]
-        self.center_y = center[1]
+import arcade
 
-        self.width = dimensions[0]
-        self.height = dimensions[1]
+class BorderRadiusRectangle:
+    def __init__(self, x=0, y=0, width=0, height=0, colour=(255,255,255), border_rad=0, resolution=1):
+
+        self.center_x = x
+        self.center_y = y
+
+        self.width = width
+        self.height = height
 
         self.colour = colour
         self.border_rad = border_rad
         self.res = resolution
 
+        # define points on the rectangle
         self.bottom_l_1 = (self.center_x - (self.width // 2), self.center_y - (self.height // 2) + self.border_rad)
         self.top_l_1 = (self.center_x - (self.width // 2), self.center_y + (self.height // 2) - self.border_rad)
         self.top_l_2 = (self.center_x - (self.width // 2) + self.border_rad, self.center_y + (self.height // 2))
@@ -20,6 +24,7 @@ class BorderRadiusRectangle:
         self.bottom_l_2 = (self.center_x - (self.width // 2) + self.border_rad, self.center_y - (self.height // 2))
 
     def draw(self):
+        # render the shape
         arcade.draw_polygon_filled([
             self.bottom_l_1,
             self.top_l_1,
