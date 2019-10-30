@@ -1,4 +1,5 @@
-import arcade, random
+import arcade
+import random
 from classes.scene import Scene
 
 RIGHT_FACING = 0
@@ -12,61 +13,6 @@ def load_texture_pair(filename):
     ]
 
 
-class Player(arcade.Sprite):
-    def __init__(self):
-        super().__init__()
-
-        # set initial direction
-        self.facing_direction = RIGHT_FACING
-
-        # load all santa sprites
-        # right and left for idle
-        self.idle_textures = load_texture_pair("images/present_catch/santa_idle.png")
-
-        # get running textures from sprite map
-        self.running_textures = [
-            arcade.load_textures("images/present_catch/santa_running.png", [
-                # moving right
-                [0, 0, 128, 128],
-                [128, 0, 128, 128],
-                [256, 0, 128, 128],
-                [384, 0, 128, 128]
-            ]),
-            arcade.load_textures("images/present_catch/santa_running.png", [
-                # moving left
-                [0, 128, 128, 128],
-                [128, 128, 128, 128],
-                [256, 128, 128, 128],
-                [384, 128, 128, 128]
-            ])
-        ]
-
-        # animation updates per frame
-        self.updates_per_frame = 10
-
-        # current texture in animation
-        self.current_texture = 0
-
-    def update_animation(self, delta_time):
-        # determine direction to be facing
-        if self.change_x < 0 and self.facing_direction == RIGHT_FACING:
-            self.facing_direction = LEFT_FACING
-        elif self.change_x > 0 and self.facing_direction == LEFT_FACING:
-            self.facing_direction = LEFT_FACING
-
-        # idle texture
-        if self.change_x == 0:
-            self.current_texture = 0
-            self.texture = self.idle_textures[self.facing_direction]
-            return
-        
-        # walking animation
-        self.current_texture += 1
-        if self.current_texture >= 4 * self.updates_per_frame:
-            self.current_texture = 0
-        self.texture = self.running_textures[self.facing_direction][self.current_texture // self.updates_per_frame]
-
-
 class PresentCatch(Scene):
     def __init__(self, game):
         super().__init__(game)
@@ -76,6 +22,9 @@ class PresentCatch(Scene):
 
         # initialise player variable
         self.player = None
+
+        # currently pressed keys
+        self.pressed_keys = []
 
     def setup(self):
         # initialise game scores
@@ -118,6 +67,94 @@ class PresentCatch(Scene):
         self.player.draw()
 
     def update(self, delta_time):
-        # update the player and their animation
+        # move if keys are being pressed
+        if arcade.key.RIGHT in self.pressed_keys and arcade.key.LEFT in self.pressed_keys:
+            # if both keys are pressed, do the one that was pressed last
+            if self.pressed_keys.index(arcade.key.RIGHT) > self.pressed_keys.index(arcade.key.LEFT) and self.player.center_x < self.game.SCREEN_WIDTH:
+                self.player.change_x = self.player.MOVEMENT_SPEED
+            elif self.player.center_x > 0:
+                self.player.change_x = -self.player.MOVEMENT_SPEED
+            else:
+                self.player.change_x = 0
+
+        elif arcade.key.RIGHT in self.pressed_keys and self.player.center_x < self.game.SCREEN_WIDTH:
+            # just right key
+            self.player.change_x = self.player.MOVEMENT_SPEED
+
+        elif arcade.key.LEFT in self.pressed_keys and self.player.center_x > 0:
+            # just left key
+            self.player.change_x = -self.player.MOVEMENT_SPEED
+
+        else:
+            self.player.change_x = 0
+
+        # update the player and their animation state
         self.player.update()
         self.player.update_animation(delta_time)
+
+    def key_press(self, key, modifiers):
+        # add key to list of pressed keys
+        if key == arcade.key.RIGHT or key == arcade.key.LEFT:
+            self.pressed_keys.append(key)
+
+    def key_release(self, key, modifiers):
+        # remove key from list of pressed keys
+        while key in self.pressed_keys: self.pressed_keys.remove(key)
+
+
+# Player class
+class Player(arcade.Sprite):
+    def __init__(self):
+        self.MOVEMENT_SPEED = 3
+
+        super().__init__()
+
+        # set initial direction
+        self.facing_direction = RIGHT_FACING
+
+        # load all santa sprites
+        # right and left for idle
+        self.idle_textures = load_texture_pair("images/present_catch/santa_idle.png")
+
+        # get running textures from sprite map
+        self.running_textures = [
+            arcade.load_textures("images/present_catch/santa_running.png", [
+                # moving right
+                [0, 0, 128, 128],
+                [128, 0, 128, 128],
+                [256, 0, 128, 128],
+                [384, 0, 128, 128]
+            ]),
+            arcade.load_textures("images/present_catch/santa_running.png", [
+                # moving left
+                [0, 128, 128, 128],
+                [128, 128, 128, 128],
+                [256, 128, 128, 128],
+                [384, 128, 128, 128]
+            ])
+        ]
+
+        # animation updates per frame
+        self.updates_per_frame = 10
+
+        # current texture in animation
+        self.current_texture = 0
+
+    def update_animation(self, delta_time):
+        # determine direction to be facing
+        if self.change_x < 0 and self.facing_direction == RIGHT_FACING:
+            self.facing_direction = LEFT_FACING
+        elif self.change_x > 0 and self.facing_direction == LEFT_FACING:
+            self.facing_direction = RIGHT_FACING
+
+        # idle texture
+        if self.change_x == 0:
+            self.current_texture = 0
+            self.texture = self.idle_textures[self.facing_direction]
+            return
+        
+        # walking animation
+        self.current_texture += 1
+        if self.current_texture >= 4 * self.updates_per_frame:
+            self.current_texture = 0
+        self.texture = self.running_textures[self.facing_direction][self.current_texture // self.updates_per_frame]
