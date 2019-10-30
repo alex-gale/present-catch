@@ -25,24 +25,33 @@ class PresentSnap(Scene):
             [1408, 0, 128, 128],
             [1536, 0, 128, 128]
             ])
+
         # names of images in order
         self.images_names = ["Santa Claus", "Candy Cane", "Present", "Stocking", "Christmas Tree", "Holly Leaves", "Christmas Wreath", "Gingerbread Man", "Christmas Candles", "Baubles", "Christmas Pudding", "Snow Globe", "Christmas Robin"]
 
         # initialise the deck in form [name, image]
         self.deck = [[self.images_names[i], self.images[i]] for i in range(13)] * 4
 
-        # the shapes that create the deck the player has
+        # the shapes that create the player's deck
         self.player_pile = BorderRadiusRectangle(102, 127, 125, 175, (240,240,240), 5)
         self.player_separator = BorderRadiusRectangle(47, 127, 11, 175, (25,25,25), 5)
         self.player_decorator_card = Card(self, 105, 127, 125, 175, colour=(240,240,240))
 
-        # self.test_card = Card(self, 330, 300, 125, 175, colour=(240, 240, 240), face="back", image=self.images[0])
+        # the shapes that create the computer's deck
+        self.computer_pile = BorderRadiusRectangle(self.game.SCREEN_WIDTH - 102, self.game.SCREEN_HEIGHT - 127, 125, 175, (240,240,240), 5)
+        self.computer_separator = BorderRadiusRectangle(self.game.SCREEN_WIDTH - 47, self.game.SCREEN_HEIGHT - 127, 11, 175, (25,25,25), 5)
+        self.computer_decorator_card = Card(self, self.game.SCREEN_WIDTH - 105, self.game.SCREEN_HEIGHT - 127, 125, 175, colour=(240,240,240), flipped=True)
+
+        # initialise box to show the second card
+        self.second_card_box = BorderRadiusRectangle(467, 352, 50, 70, colour=(240,240,240), border_rad=5)
 
     def setup(self):
         self.score = 0
 
         # runs code to add card to the button list
         self.played_card = True
+
+        self.player_turn = True
 
         # deal the cards
         self.play_pile = []
@@ -52,27 +61,45 @@ class PresentSnap(Scene):
 
     def draw(self):
 
-        # draw player card pile
-        self.player_pile.draw()
-        self.player_separator.draw()
-        self.player_decorator_card.draw()
-        self.current_card.draw()
+        # central line
+        # arcade.draw_line(self.game.SCREEN_WIDTH // 2, 0, self.game.SCREEN_WIDTH // 2, self.game.SCREEN_HEIGHT, (255, 0, 0))
+        # arcade.draw_line((self.game.SCREEN_WIDTH // 2) + 1, 0, (self.game.SCREEN_WIDTH // 2) + 1, self.game.SCREEN_HEIGHT, (255, 0, 0))
 
-        # draws the last card in the play pile
+        # draw player card pile
+        if len(self.player_hand) > 1:
+            self.player_pile.draw()
+            self.player_separator.draw()
+            self.player_decorator_card.draw()
+        if len(self.player_hand) > 0:
+            self.current_card.draw()
+
+        # draw computer card pile
+        self.computer_pile.draw()
+        self.computer_separator.draw()
+        self.computer_decorator_card.draw()
+
+        # draws the top card in the play pile
         if len(self.play_pile) != 0:
-            self.play_pile[-1].draw()
+            self.play_pile[-1][1].draw()
+
+        # displays the second card in the play pile
+        if len(self.play_pile) > 1:
+            self.second_card_box.draw()
+            arcade.draw_rectangle_outline(467, 352, 40, 60, color=(220,32,32))
+            arcade.draw_texture_rectangle(467, 343, 40, 40, texture=self.play_pile[-2][1].image[1])
 
     def update(self, delta_time):
         # when a card is played, the next card becomes the current card and becomes pressable
         if self.played_card:
-            self.played_card = False
-            self.current_card = Card(self, 105, 127, 125, 175, image=self.player_hand[0], colour=(240,240,240), face="back")
-            self.button_list.append(self.current_card)
+            if len(self.player_hand) > 0 and self.player_turn:
+                self.played_card = False
+                self.current_card = Card(self, 105, 127, 125, 175, image=self.player_hand[0], colour=(240,240,240), face="back")
+                self.button_list.append(self.current_card)
 
     def play_card(self, card):
         # moves the card to the play pile
-        card.update_position(330, 300)
-        self.play_pile.append(self.current_card)
+        card.update_position(365, 300)
+        self.play_pile.append([self.player_hand[0], self.current_card])
 
         # updates the card to turn it and show the face
         card.face = "face"
@@ -86,21 +113,24 @@ class PresentSnap(Scene):
 
 
 class Card:
-    def __init__(self, present_snap, x=0, y=0, width=125, height=175, image=['', None], face="back", colour=(0,0,0)):
+    def __init__(self, present_snap, x=0, y=0, width=125, height=175, image=['', None], colour=(0,0,0), alpha=255, face="back", flipped=False):
         self.center_x = x
         self.center_y = y
         self.width = width
         self.height = height
+
+        self.colour = colour
+        self.alpha = alpha
 
         # card [name, image]
         self.image = image
 
         self.present_snap = present_snap
         self.face = face
-        self.played = False
+        self.flipped = flipped
 
         # initialise the card border
-        self.card_background = BorderRadiusRectangle(self.center_x, self.center_y, width, height, colour, border_rad=5)
+        self.card_background = BorderRadiusRectangle(self.center_x, self.center_y, self.width, self.height, (*self.colour, self.alpha), border_rad=5)
         self.card_back = arcade.load_texture("images/card_back.png")
 
     def draw(self):
@@ -108,16 +138,24 @@ class Card:
         self.card_background.draw()
         # render either face or back, depending on side visible
         if self.face == "back":
-            arcade.draw_texture_rectangle(self.center_x, self.center_y, 110, 160, self.card_back)
+            if self.flipped:
+                arcade.draw_texture_rectangle(self.center_x, self.center_y, 110, 160, self.card_back, alpha=self.alpha, angle=180)
+            else:
+                arcade.draw_texture_rectangle(self.center_x, self.center_y, 110, 160, self.card_back, alpha=self.alpha)
         elif self.face == "face":
-            arcade.draw_rectangle_outline(self.center_x, self.center_y, 110, 160, (220,32,32))
-            arcade.draw_texture_rectangle(self.center_x, self.center_y - 24, 100, 100, self.image[1])
+            arcade.draw_rectangle_outline(self.center_x, self.center_y, 110, 160, (220,32,32,self.alpha))
+            arcade.draw_texture_rectangle(self.center_x, self.center_y - 24, 100, 100, self.image[1], alpha=self.alpha)
 
     def update_position(self, x, y):
         # update the position of the card
         self.center_x = x
         self.center_y = y
         self.card_background.update_position(self.center_x, self.center_y)
+
+    def update_alpha(self, alpha):
+        # update the alpha of the card
+        self.alpha = alpha
+        self.card_background.colour = (*card_background.colour[:3], self.alpha)
 
     def on_press(self):
         self.pressed = True
