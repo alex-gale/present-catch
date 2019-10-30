@@ -20,9 +20,6 @@ class PresentCatch(Scene):
         # initialise background
         self.background = arcade.load_texture("images/present_catch/background.jpg")
 
-        # initialise player variable
-        self.player = None
-
         # currently pressed keys
         self.pressed_keys = []
 
@@ -38,6 +35,12 @@ class PresentCatch(Scene):
 
         # initialise empty array for ground tiles
         self.ground_list = arcade.SpriteList()
+
+        # initialise empty array for presents
+        self.present_list = arcade.SpriteList()
+
+        present = Present(random.randint(0, 800), 600)
+        self.present_list.append(present)
 
         # random ground tiles
         # ground level tiles
@@ -66,6 +69,9 @@ class PresentCatch(Scene):
         # draw the player
         self.player.draw()
 
+        # draw the presents
+        self.present_list.draw()
+
     def update(self, delta_time):
         # move if keys are being pressed
         if arcade.key.RIGHT in self.pressed_keys and arcade.key.LEFT in self.pressed_keys:
@@ -88,9 +94,18 @@ class PresentCatch(Scene):
         else:
             self.player.change_x = 0
 
+        # check for present collisions with player
+        player_present_hit_list = arcade.check_for_collision_with_list(self.player, self.present_list)
+        for present in player_present_hit_list:
+            present.remove_from_sprite_lists()
+            self.score += 1
+
         # update the player and their animation state
         self.player.update()
         self.player.update_animation(delta_time)
+
+        # update the presents
+        self.present_list.update()
 
     def key_press(self, key, modifiers):
         # add key to list of pressed keys
@@ -158,3 +173,17 @@ class Player(arcade.Sprite):
         if self.current_texture >= 4 * self.updates_per_frame:
             self.current_texture = 0
         self.texture = self.running_textures[self.facing_direction][self.current_texture // self.updates_per_frame]
+
+
+# Present Class
+class Present(arcade.Sprite):
+    def __init__(self, x=0, y=0):
+        super().__init__(filename=None, center_x=x, center_y=y)
+
+        self.textures = [
+            "images/present_catch/present_1.png"
+        ]
+
+        self.texture = arcade.load_texture(random.choice(self.textures))
+
+        self.change_y = -2.5
