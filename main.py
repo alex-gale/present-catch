@@ -93,8 +93,19 @@ class Game(arcade.Window):
         self.scenes[state_value].draw()
 
     def on_update(self, delta_time):
+        ## run updates to scenes
         state_value = self.current_state.value
         self.scenes[state_value].update(delta_time)
+
+    def on_key_press(self, key, modifiers):
+        ## send key presses to scenes
+        state_value = self.current_state.value
+        self.scenes[state_value].key_press(key, modifiers)
+
+    def on_key_release(self, key, modifiers):
+        ## send key releases to scenes
+        state_value = self.current_state.value
+        self.scenes[state_value].key_release(key, modifiers)
 
     def on_mouse_press(self, x, y, button, key_modifiers):
         ## check for mouse presses
