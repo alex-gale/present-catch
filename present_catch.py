@@ -7,7 +7,9 @@ from classes.scene import Scene
 
 RIGHT_FACING = 0
 LEFT_FACING = 1
-DANCING = 2
+DANCING_1 = 2
+DANCING_2 = 3
+DANCING_3 = 4
 
 def load_texture_pair(filename):
     # load two sprites facing either direction
@@ -95,14 +97,6 @@ class PresentCatch(Scene):
             score_icon.center_y = 30
             score_icon.alpha = 150
             self.score_icon_list.append(score_icon)
-
-    def start_game(self):
-        # hide the info box when space is pressed and begin the game
-        self.game_state = PresentCatchGameState.COUNTDOWN
-
-    def exit_game(self):
-        # return to the game menu
-        self.game.change_game_state("GAME_MENU")
 
     def summon_present(self):
         # creates a present at a random x coord to fall from the sky
@@ -235,10 +229,13 @@ class PresentCatch(Scene):
             self.game_state = PresentCatchGameState.GAME_OVER
 
 
+        # game over state
         if self.game_state == PresentCatchGameState.GAME_OVER:
             self.player.change_x = 0
             self.present_list = arcade.SpriteList()
-            self.player.action = DANCING
+
+            if self.player.action not in [DANCING_1, DANCING_2, DANCING_3]:
+                self.player.action = random.choice([DANCING_1, DANCING_2, DANCING_3])
 
 
         # update the player and their animation state
@@ -260,10 +257,12 @@ class PresentCatch(Scene):
             self.pressed_keys.remove(key)
 
         if key == arcade.key.SPACE and self.game_state == PresentCatchGameState.WAITING:
-            self.start_game()
+            # start game if space is pressed when info box is shown
+            self.game_state = PresentCatchGameState.COUNTDOWN
 
         if key == arcade.key.ESCAPE:
-            self.exit_game()
+            # return to the game menu if escape is pressed
+            self.game.change_game_state("GAME_MENU")
 
 
 # Player class
@@ -297,7 +296,7 @@ class Player(arcade.Sprite):
                 [384, 128, 128, 128]
             ]),
             arcade.load_textures("images/present_catch/santa_dancing.png", [
-                # dancing
+                # dance 1 - something
                 [0, 0, 128, 128],
                 [128, 0, 128, 128],
                 [256, 0, 128, 128],
@@ -306,11 +305,25 @@ class Player(arcade.Sprite):
                 [640, 0, 128, 128],
                 [768, 0, 128, 128],
                 [896, 0, 128, 128]
+            ]),
+            arcade.load_textures("images/present_catch/santa_dancing.png", [
+                # dance 2 - kicking
+                [0, 128, 128, 128],
+                [128, 128, 128, 128],
+                [256, 128, 128, 128],
+                [384, 128, 128, 128]
+            ]),
+            arcade.load_textures("images/present_catch/santa_dancing.png", [
+                # dance 3 - clapping
+                [512, 128, 128, 128],
+                [640, 128, 128, 128],
+                [768, 128, 128, 128],
+                [896, 128, 128, 128]
             ])
         ]
 
         # animation updates per frame
-        self.updates_per_frame = 10
+        self.FRAMES_PER_UPDATE = 10
 
         # current texture in animation
         self.current_texture = 0
@@ -326,16 +339,16 @@ class Player(arcade.Sprite):
             self.action = RIGHT_FACING
 
         # idle texture
-        if self.change_x == 0 and self.action != DANCING:
+        if self.change_x == 0 and self.action not in [DANCING_1, DANCING_2, DANCING_3]:
             self.current_texture = 0
             self.texture = self.idle_textures[self.action]
             return
         
         # walking animation
         self.current_texture += 1
-        if self.current_texture >= (len(self.animated_textures[self.action])) * self.updates_per_frame:
+        if self.current_texture >= (len(self.animated_textures[self.action])) * self.FRAMES_PER_UPDATE:
             self.current_texture = 0
-        self.texture = self.animated_textures[self.action][self.current_texture // self.updates_per_frame]
+        self.texture = self.animated_textures[self.action][self.current_texture // self.FRAMES_PER_UPDATE]
 
 
 # Present Class
