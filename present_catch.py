@@ -149,13 +149,20 @@ class PresentCatch(Scene):
             arcade.draw_text("Press SPACE to start", self.game.SCREEN_WIDTH * 0.5, 421, (50, 50, 50), 14, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
 
         
-        # show win message is game is over
+        # show message if game is over
         if self.game_state == PresentCatchGameState.GAME_OVER:
             arcade.draw_rectangle_filled(self.game.SCREEN_WIDTH * 0.5, self.game.SCREEN_HEIGHT * 0.8, 600, 150, (184, 184, 184))
             arcade.draw_rectangle_outline(self.game.SCREEN_WIDTH * 0.5, self.game.SCREEN_HEIGHT * 0.8, 600, 150, (140, 140, 140), 4)
 
-            arcade.draw_text("Congratulations", self.game.SCREEN_WIDTH * 0.5, 510, arcade.color.BLACK, 25, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
-            arcade.draw_text("You saved Christmas.", self.game.SCREEN_WIDTH * 0.5, 485, arcade.color.BLACK, 15, anchor_x="center", font_name="fonts/OpenSans-Regular.ttf")
+            if self.score < 20:
+                title_text = "Game Over"
+                main_text = "Christmas is ruined."
+            else:
+                title_text = "Congratulations"
+                main_text = "You saved Christmas"
+
+            arcade.draw_text(title_text, self.game.SCREEN_WIDTH * 0.5, 510, arcade.color.BLACK, 25, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
+            arcade.draw_text(main_text, self.game.SCREEN_WIDTH * 0.5, 485, arcade.color.BLACK, 15, anchor_x="center", font_name="fonts/OpenSans-Regular.ttf")
             arcade.draw_text("Score: {}".format(self.score), self.game.SCREEN_WIDTH * 0.5, 455, arcade.color.BLACK, 15, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
 
             arcade.draw_text("Press ESCAPE to quit", self.game.SCREEN_WIDTH * 0.5, 421, (50, 50, 50), 14, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
