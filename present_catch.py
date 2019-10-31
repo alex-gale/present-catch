@@ -7,6 +7,7 @@ from classes.scene import Scene
 
 RIGHT_FACING = 0
 LEFT_FACING = 1
+DANCING = 2
 
 def load_texture_pair(filename):
     # load two sprites facing either direction
@@ -19,7 +20,7 @@ class PresentCatchGameState(enum.Enum):
     WAITING = 0
     COUNTDOWN = 1
     PLAYING = 2
-    WON_GAME = 3
+    GAME_OVER = 3
 
 class PresentCatch(Scene):
     def __init__(self, game):
@@ -50,6 +51,7 @@ class PresentCatch(Scene):
 
         # initialise game scores
         self.present_count = 0
+        self.presents_fallen = 0
         self.score = 0
 
         # setup player
@@ -94,6 +96,14 @@ class PresentCatch(Scene):
             score_icon.alpha = 150
             self.score_icon_list.append(score_icon)
 
+    def start_game(self):
+        # hide the info box when space is pressed and begin the game
+        self.game_state = PresentCatchGameState.COUNTDOWN
+
+    def exit_game(self):
+        # return to the game menu
+        self.game.change_game_state("GAME_MENU")
+
     def summon_present(self):
         # creates a present at a random x coord to fall from the sky
         present = Present()
@@ -122,6 +132,7 @@ class PresentCatch(Scene):
         if self.game_state == PresentCatchGameState.COUNTDOWN:
             arcade.draw_text(str(math.ceil(self.countdown)), self.game.SCREEN_WIDTH * 0.5, self.game.SCREEN_HEIGHT * 0.5, arcade.color.WHITE, 60, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
 
+
         # show the game info if in the waiting state
         if self.game_state == PresentCatchGameState.WAITING:
             arcade.draw_rectangle_filled(self.game.SCREEN_WIDTH * 0.5, self.game.SCREEN_HEIGHT * 0.8, 600, 150, (184, 184, 184))
@@ -135,7 +146,19 @@ class PresentCatch(Scene):
                 arcade.draw_text(line, self.game.SCREEN_WIDTH * 0.5, 485 - line_offset, arcade.color.BLACK, 15, anchor_x="center", font_name="fonts/OpenSans-Regular.ttf")
                 line_offset += 17
 
-            arcade.draw_text("Press SPACE to start", self.game.SCREEN_WIDTH * 0.5, 485 - line_offset - 30, (50, 50, 50), 14, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
+            arcade.draw_text("Press SPACE to start", self.game.SCREEN_WIDTH * 0.5, 421, (50, 50, 50), 14, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
+
+        
+        # show win message is game is over
+        if self.game_state == PresentCatchGameState.GAME_OVER:
+            arcade.draw_rectangle_filled(self.game.SCREEN_WIDTH * 0.5, self.game.SCREEN_HEIGHT * 0.8, 600, 150, (184, 184, 184))
+            arcade.draw_rectangle_outline(self.game.SCREEN_WIDTH * 0.5, self.game.SCREEN_HEIGHT * 0.8, 600, 150, (140, 140, 140), 4)
+
+            arcade.draw_text("Congratulations", self.game.SCREEN_WIDTH * 0.5, 510, arcade.color.BLACK, 25, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
+            arcade.draw_text("You saved Christmas.", self.game.SCREEN_WIDTH * 0.5, 485, arcade.color.BLACK, 15, anchor_x="center", font_name="fonts/OpenSans-Regular.ttf")
+            arcade.draw_text("Score: {}".format(self.score), self.game.SCREEN_WIDTH * 0.5, 455, arcade.color.BLACK, 15, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
+
+            arcade.draw_text("Press ESCAPE to quit", self.game.SCREEN_WIDTH * 0.5, 421, (50, 50, 50), 14, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
 
         # draw the little score counter above the counter icons
         arcade.draw_text(str(self.score), self.game.SCREEN_WIDTH * 0.5, 50, arcade.color.WHITE, 17, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
@@ -182,6 +205,7 @@ class PresentCatch(Scene):
 
                 # remove the present and increment score
                 present.remove_from_sprite_lists()
+                self.presents_fallen += 1
                 self.score += 1
 
             # check for presents hitting the ground
@@ -189,6 +213,7 @@ class PresentCatch(Scene):
                 if present.center_y - present.height / 2 <= 128:
                     # remove present if it hits the ground
                     present.remove_from_sprite_lists()
+                    self.presents_fallen += 1
 
             # summon a present every self.PRESENT_FREQUENCY seconds
             self.time_since_present += delta_time
@@ -198,14 +223,15 @@ class PresentCatch(Scene):
                 self.time_since_present = 0
 
 
-        # if all the presents have been caught, the player has won
-        if self.score == self.PRESENTS_TO_DROP:
-            self.game_state = PresentCatchGameState.WON_GAME
+        # if all the presents have been caught, the game is over
+        if self.presents_fallen == self.PRESENTS_TO_DROP:
+            self.game_state = PresentCatchGameState.GAME_OVER
 
 
-        if self.game_state == PresentCatchGameState.WON_GAME:
+        if self.game_state == PresentCatchGameState.GAME_OVER:
             self.player.change_x = 0
             self.present_list = arcade.SpriteList()
+            self.player.action = DANCING
 
 
         # update the player and their animation state
@@ -218,12 +244,18 @@ class PresentCatch(Scene):
 
     def key_press(self, key, modifiers):
         # add key to list of pressed keys
-        if key == arcade.key.RIGHT or key == arcade.key.LEFT:
+        if key == arcade.key.RIGHT or key == arcade.key.LEFT or key == arcade.key.SPACE:
             self.pressed_keys.append(key)
 
     def key_release(self, key, modifiers):
         # remove key from list of pressed keys
         while key in self.pressed_keys: self.pressed_keys.remove(key)
+
+        if key == arcade.key.SPACE and self.game_state == PresentCatchGameState.WAITING:
+            self.start_game()
+
+        if key == arcade.key.ESCAPE:
+            self.exit_game()
 
 
 # Player class
@@ -234,14 +266,14 @@ class Player(arcade.Sprite):
         super().__init__()
 
         # set initial direction
-        self.facing_direction = RIGHT_FACING
+        self.action = RIGHT_FACING
 
         # load all santa sprites
         # right and left for idle
         self.idle_textures = load_texture_pair("images/present_catch/santa_idle.png")
 
         # get running textures from sprite map
-        self.running_textures = [
+        self.animated_textures = [
             arcade.load_textures("images/present_catch/santa_running.png", [
                 # moving right
                 [0, 0, 128, 128],
@@ -255,6 +287,17 @@ class Player(arcade.Sprite):
                 [128, 128, 128, 128],
                 [256, 128, 128, 128],
                 [384, 128, 128, 128]
+            ]),
+            arcade.load_textures("images/present_catch/santa_dancing.png", [
+                # dancing
+                [0, 0, 128, 128],
+                [128, 0, 128, 128],
+                [256, 0, 128, 128],
+                [384, 0, 128, 128],
+                [512, 0, 128, 128],
+                [640, 0, 128, 128],
+                [768, 0, 128, 128],
+                [896, 0, 128, 128]
             ])
         ]
 
@@ -269,22 +312,22 @@ class Player(arcade.Sprite):
 
     def update_animation(self, delta_time):
         # determine direction to be facing
-        if self.change_x < 0 and self.facing_direction == RIGHT_FACING:
-            self.facing_direction = LEFT_FACING
-        elif self.change_x > 0 and self.facing_direction == LEFT_FACING:
-            self.facing_direction = RIGHT_FACING
+        if self.change_x < 0 and self.action == RIGHT_FACING:
+            self.action = LEFT_FACING
+        elif self.change_x > 0 and self.action == LEFT_FACING:
+            self.action = RIGHT_FACING
 
         # idle texture
-        if self.change_x == 0:
+        if self.change_x == 0 and self.action != DANCING:
             self.current_texture = 0
-            self.texture = self.idle_textures[self.facing_direction]
+            self.texture = self.idle_textures[self.action]
             return
         
         # walking animation
         self.current_texture += 1
-        if self.current_texture >= 4 * self.updates_per_frame:
+        if self.current_texture >= (len(self.animated_textures[self.action])) * self.updates_per_frame:
             self.current_texture = 0
-        self.texture = self.running_textures[self.facing_direction][self.current_texture // self.updates_per_frame]
+        self.texture = self.animated_textures[self.action][self.current_texture // self.updates_per_frame]
 
 
 # Present Class
@@ -294,11 +337,12 @@ class Present(arcade.Sprite):
 
         # all present textures with weight to be chosen
         self.present_textures = [
-            ["images/present_catch/present_1.png", 0.2475],
-            ["images/present_catch/present_2.png", 0.2475],
-            ["images/present_catch/present_3.png", 0.2475],
-            ["images/present_catch/present_4.png", 0.2475],
-            ["images/present_catch/present_6.png", 0.01],
+            ["images/present_catch/present_1.png", 0.198],
+            ["images/present_catch/present_2.png", 0.198],
+            ["images/present_catch/present_3.png", 0.198],
+            ["images/present_catch/present_4.png", 0.198],
+            ["images/present_catch/present_5.png", 0.198],
+            ["images/present_catch/present_6.png", 0.01]
         ]
 
         # weighted choice
