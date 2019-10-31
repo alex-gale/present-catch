@@ -57,13 +57,12 @@ class PresentSnap(Scene):
 
         # initialise snap button
         self.snap_button_texture = arcade.load_texture("images/present_snap/snap_button.png")
+        self.snap_button = SnapButton(self, 400, 86, 128, 64, self.snap_button_texture)
 
         self.drawn = False
 
     def setup(self):
-        self.score = 0
-
-        # will make the first card playable
+        # makes the first card playable
         self.played_card = True
 
         # keeps track of player and computer turns
@@ -72,6 +71,16 @@ class PresentSnap(Scene):
         # keep track of snaps
         self.snap = False
         self.snap_frame = 0
+
+        # self.player_snap = False
+        self.computer_snap = False
+        self.snap_history = []
+
+        # track the time for the computer to wait before snapping
+        self.computer_snap_time = 0
+        self.snap_frames = 0
+
+        self.snap_display_timer = 0
 
         # deal the cards
         self.play_pile = []
@@ -107,14 +116,23 @@ class PresentSnap(Scene):
         # tells the player which turn it is
         arcade.draw_text( ("Your " if self.turn_number % 2 == 1 else "Computer's ") + "turn",
                         400, 50, self.text_colour, 20, font_name="fonts/Courgette-Regular.ttf", anchor_x="center")
+        
+        # number of cards for player and computer
+        # player
+        arcade.draw_text("Cards: {}".format( len(self.player_hand) ), 43, 224, self.text_colour, 13, font_name="fonts/Courgette-Regular.ttf", anchor_x="left")
+        # computer
+        arcade.draw_text("Cards: {}".format( len(self.computer_hand) ), 727, 281, self.text_colour, 13, font_name="fonts/Courgette-Regular.ttf", anchor_x="center", anchor_y="top")
 
-        # play pile
+        # PLAY PILE
+        # labels
         arcade.draw_text("Play Pile", 273, 306, (*self.text_colour, 140), 13, font_name="fonts/Courgette-Regular.ttf", anchor_x="center", anchor_y="center", rotation=90)
         arcade.draw_text("Previous", 432, 306, (*self.text_colour, 140), 13, font_name="fonts/Courgette-Regular.ttf", anchor_x="center", anchor_y="center", rotation=90)
 
         # draws the empty play pile
         if len(self.play_pile) == 0:
+
             self.empty_play_pile.draw()
+            # description text
             for i, line in enumerate(self.play_pile_desc):
                 arcade.draw_text(line, 345, 318 - (20 * i), self.text_colour, 13, font_name="fonts/Courgette-Regular.ttf", anchor_x="center")
 
@@ -127,54 +145,132 @@ class PresentSnap(Scene):
             self.second_card_box.draw()
             arcade.draw_rectangle_outline(467, 305, 40, 60, color=(220,32,32))
             arcade.draw_texture_rectangle(467, 296, 40, 40, texture=self.play_pile[-2][0][1])
-        # displays empty box for the second card
         else:
+            # displays empty box for the second card
             self.empty_second_box.draw()
 
         # renders if snap is drawn
         if self.snap:
-            arcade.draw_texture_rectangle(400, 124, 128, 64, texture=self.snap_button_texture)
+            self.snap_button.draw()
+            # arcade.draw_texture_rectangle(400, 124, 128, 64, texture=self.snap_button_texture)
+
+        # tell the player who got snap
+        if self.snap_display_timer > 0:
+            self.snap_display_timer -= 1
+            arcade.draw_text( ("You " if self.snap_history[-1] == "player" else "Computer ") + "got snap!",
+                400, 430, self.text_colour, 16, font_name="fonts/Courgette-Regular.ttf", anchor_x="center")
 
         # allows logic to execute
         self.drawn = True
 
     def update(self, delta_time):
         # snap detection
-        if len(self.play_pile) > 1 and self.play_pile[-1][0] == self.play_pile[-2][0]:
-            self.snap = True
-            computer_snap_time = random.uniform(0.5,1.2)
-            snap_frames = computer_snap_time / delta_time
-            # add code for player to snap (SnapButton class?)
-            print("snap")
-            # execute for computer to do code
-            if self.snap_frame > snap_frames:
-                self.snap = False
-                self.snap_frame = 0
-                # add code for cards to get taken by the computer
-            else:
-                self.snap_frame += 1
+        if self.drawn:
 
-        # when a card is played, the next card becomes the current card and becomes pressable
-        if self.turn_number % 2 == 1 and not self.snap:
-            # checks that it's the players turn
-            if len(self.player_hand) > 0 and self.played_card:
-                self.played_card = False
-                self.button_list.append(self.current_card)
+            if len(self.play_pile) > 1 and self.play_pile[-1][0] == self.play_pile[-2][0]:
+                self.snap = True
 
-        # do the computer's move if it's the computer's turn
-        elif self.turn_number % 2 == 0 and self.drawn and not self.snap:
-            # self.computer_turn()
-            time.sleep(0.8)
-            computer_card = Card(self, self.game.SCREEN_WIDTH - 105, self.game.SCREEN_HEIGHT - 127, 125, 175, image=self.computer_hand[0], colour=(240,240,240), flipped=True)
-            computer_card.update_position(345, 253)
-            computer_card.flipped = False
-            computer_card.face = "face"
-            self.play_pile.append([self.computer_hand.pop(0), computer_card])
-            self.turn_number += 1
+                # add snap button to button list
+                if self.snap_button not in self.button_list:
+                    self.button_list.append(self.snap_button)
+                    # print(self.button_list)
 
-            # updates the current card again
-            self.played_card = True
+                if self.computer_snap_time == 0:
+                    self.computer_snap_time = random.uniform(0.7,1.3)
+                    self.snap_frames = self.computer_snap_time * 60
+                    # print("delta_time: {}\ncomputer_snap_time: {}\nsnap_frames: {}\nsnap_frame: {}".format(delta_time, self.computer_snap_time, self.snap_frames, self.snap_frame))
 
+                # tests if computer gets a snap before player
+                if self.snap_frame > self.snap_frames:
+                    self.computer_snap = True
+                    print("computer snap")
+
+                    # no longer snap situation (reset snap)
+                    self.snap = False
+                    self.snap_frame = 0
+                    self.computer_snap_time = 0
+                    self.snap_frames = 0
+
+                    # computer takes all cards in snap pile to the bottom of its deck
+                    self.computer_hand += [item[0] for item in self.play_pile]
+                    # empty the play pile
+                    self.play_pile = []
+
+                    # no longer snap on next move
+                    self.computer_snap = False
+
+                    # remove snap button from button list
+                    self.button_list.remove(self.snap_button)
+
+                    self.snap_history.append("computer")
+                    self.snap_display_timer = 1.5 * 60
+
+                    self.drawn = False
+
+                else:
+                    self.snap_frame += 1
+
+
+
+            # when a card is played, the next card becomes the current card and becomes pressable
+            if self.turn_number % 2 == 1 and not self.snap:
+                # checks that it's the players turn
+                if len(self.player_hand) > 0 and self.played_card:
+                    # the player has not played a card in the current turn
+                    self.played_card = False
+                    # make next card pressable
+                    self.button_list.append(self.current_card)
+                    # print("added to button list\n{}".format(self.button_list))
+
+            # do the computer's move if it's the computer's turn
+            elif self.turn_number % 2 == 0 and not self.snap:
+                # wait for a bit before the computer moves
+                time.sleep(0.8)
+                
+                # create the card
+                computer_card = Card(self, self.game.SCREEN_WIDTH - 105, self.game.SCREEN_HEIGHT - 127, 125, 175, image=self.computer_hand[0], colour=(240,240,240), flipped=True)
+                
+                # move the card to the play pile
+                computer_card.update_position(345, 253)
+                computer_card.flipped = False
+                computer_card.face = "face"
+
+                # the next turn begins
+                self.turn_number += 1
+
+                self.play_pile.append([self.computer_hand.pop(0), computer_card])
+
+
+            self.drawn = False
+
+    def snap_player(self):
+        # checks computer hasn't already got snap
+        if not self.computer_snap:
+
+            print("player snap")
+
+            # no longer snap situation (reset snap)
+            self.snap = False
+            self.computer_snap_time = 0
+            self.snap_frame = 0
+            self.snap_frames = 0
+
+            # player takes all cards in snap pile to the bottom of their deck
+            self.player_hand += [item[0] for item in self.play_pile]
+            # empty the play pile
+            self.play_pile = []
+
+            # no longer snap on next move
+            # self.player_snap = False
+
+            # remove snap button from button list
+            self.button_list.remove(self.snap_button)
+
+            self.snap_history.append("player")
+            self.snap_display_timer = 1.5 * 60
+
+        # force game to draw before executing logic again
+        self.drawn = False
 
     def play_card(self, card):
         # moves the card to the play pile and removes from the player's hand
@@ -186,17 +282,17 @@ class PresentSnap(Scene):
         # stops the played card being pressable
         self.button_list.remove(self.current_card)
 
-        # makes the next card clickable
+        # instantiates the next card
         if len(self.player_hand) > 0:
             self.current_card = Card(self, 105, 127, 125, 175, image=self.player_hand[0], colour=(240,240,240), face="back")
+
+        # makes the next card playable
+            self.played_card = True
 
         # the next turn will occur (computer turn)
         self.turn_number += 1
 
         self.drawn = False
-
-    def pause(self, seconds, delta_time):
-        pass
 
 
 class Card:
@@ -251,3 +347,25 @@ class Card:
         self.pressed = False
         # plays the card
         self.present_snap.play_card(self)
+
+class SnapButton:
+    def __init__(self, present_snap, x=0, y=0, width=64, height=64, image=None):
+        self.center_x = x
+        self.center_y = y
+        self.width = width
+        self.height = height
+
+        self.image = image
+
+        self.present_snap = present_snap
+
+    def draw(self):
+        arcade.draw_texture_rectangle(self.center_x, self.center_y, self.width, self.height, self.image)
+
+    def on_press(self):
+        self.pressed = True
+
+    def on_release(self):
+        self.pressed = False
+        # player gets snap
+        self.present_snap.snap_player()
