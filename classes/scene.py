@@ -18,3 +18,11 @@ class Scene:
     def update(self, delta_time):
         ## this is run every time the game is updated and this is the current scene
         pass
+
+    def key_press(self, key, modifier):
+        ## this is run whenever a key is pressed
+        pass
+
+    def key_release(self, key, modifier):
+        ## this is run whenever a key is released
+        pass
