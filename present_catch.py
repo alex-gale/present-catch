@@ -39,8 +39,7 @@ class PresentCatch(Scene):
         # initialise empty array for presents
         self.present_list = arcade.SpriteList()
 
-        present = Present(random.randint(0, 800), 600)
-        self.present_list.append(present)
+        self.summon_present()
 
         # random ground tiles
         # ground level tiles
@@ -59,6 +58,13 @@ class PresentCatch(Scene):
             ground.center_y = 32
             self.ground_list.append(ground)
 
+    def summon_present(self):
+        # creates a present at a random x coord to fall from the sky
+        present = Present()
+        present.center_x = random.randint(0 + present.width / 2, 800 - present.width / 2)
+        present.center_y = 600 + present.height / 2
+        self.present_list.append(present)
+
     def draw(self):
         # draw background
         arcade.draw_texture_rectangle(self.game.SCREEN_WIDTH // 2, self.game.SCREEN_HEIGHT // 2, self.game.SCREEN_WIDTH, self.game.SCREEN_HEIGHT, self.background)
@@ -66,11 +72,11 @@ class PresentCatch(Scene):
         # draw ground tiles
         self.ground_list.draw()
 
-        # draw the player
-        self.player.draw()
-
         # draw the presents
         self.present_list.draw()
+
+        # draw the player
+        self.player.draw()
 
     def update(self, delta_time):
         # move if keys are being pressed
@@ -99,6 +105,11 @@ class PresentCatch(Scene):
         for present in player_present_hit_list:
             present.remove_from_sprite_lists()
             self.score += 1
+
+        # check for presents hitting the ground
+        for present in self.present_list:
+            if present.center_y - present.height / 2 <= 128:
+                present.remove_from_sprite_lists()
 
         # update the player and their animation state
         self.player.update()
@@ -155,6 +166,9 @@ class Player(arcade.Sprite):
         # current texture in animation
         self.current_texture = 0
 
+        # hitbox
+        self.points = [[-40, 64], [40, 64], [40, -64], [-40, -64]]
+
     def update_animation(self, delta_time):
         # determine direction to be facing
         if self.change_x < 0 and self.facing_direction == RIGHT_FACING:
@@ -180,10 +194,12 @@ class Present(arcade.Sprite):
     def __init__(self, x=0, y=0):
         super().__init__(filename=None, center_x=x, center_y=y)
 
-        self.textures = [
+        # all present textures
+        self.present_textures = [
             "images/present_catch/present_1.png"
         ]
 
-        self.texture = arcade.load_texture(random.choice(self.textures))
+        # load a random present texture
+        self.texture = arcade.load_texture(random.choice(self.present_textures))
 
         self.change_y = -2.5
