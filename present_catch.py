@@ -256,7 +256,8 @@ class PresentCatch(Scene):
 
     def key_release(self, key, modifiers):
         # remove key from list of pressed keys
-        while key in self.pressed_keys: self.pressed_keys.remove(key)
+        while key in self.pressed_keys:
+            self.pressed_keys.remove(key)
 
         if key == arcade.key.SPACE and self.game_state == PresentCatchGameState.WAITING:
             self.start_game()
