@@ -53,7 +53,7 @@ class PresentSnap(Scene):
         # initialise the empty play pile
         self.empty_play_pile = BorderRadiusRectangle(345, 253, 125, 175, colour=(147,91,30), border_rad=5)
         text_wrapper = textwrap.TextWrapper(width=15)
-        self.play_pile_desc = text_wrapper.wrap("This is the play pile.\nCards will be placed here once played.")
+        self.play_pile_desc = text_wrapper.wrap("This is the play pile.\nPlace cards here to start playing.")
 
         # initialise snap button
         self.snap_button_texture = arcade.load_texture("images/present_snap/snap_button.png")
@@ -146,10 +146,6 @@ class PresentSnap(Scene):
         if len(self.computer_hand) > 0:
             self.computer_decorator_card.draw()
 
-        # draw the next card
-        if len(self.player_hand) > 0:
-            self.current_card.draw()
-
         # draw top card in play pile
         if len(self.play_pile) > 0:
             self.play_pile[-1][1].draw()
@@ -188,6 +184,10 @@ class PresentSnap(Scene):
         # draw snap button
         if self.snap:
             self.snap_button.draw()
+
+        # draw the next card
+        if len(self.player_hand) > 0:
+            self.current_card.draw()
 
         # display if the game is done
         if self.winner:
@@ -292,6 +292,12 @@ class PresentSnap(Scene):
         if key == arcade.key.ESCAPE:
             self.game.change_game_state("GAME_MENU")
 
+    # handle mouse motion
+    def mouse_movement(self, x, y, dx, dy):
+        if self.current_card.active:
+            self.current_card.update_position(x, y)
+            self.current_card.update_alpha(190)
+
 
 class Card:
     def __init__(self, present_snap, x=0, y=0, width=125, height=175, card_info=['', None], colour=(0,0,0), alpha=255, face="back", angle=0):
@@ -310,6 +316,7 @@ class Card:
 
         self.present_snap = present_snap
         self.face = face
+        self.active = False
 
         # initialise the card border
         self.card_background = BorderRadiusRectangle(self.center_x, self.center_y, self.width, self.height, (*self.colour, self.alpha), border_rad=5)
@@ -336,15 +343,24 @@ class Card:
     def update_alpha(self, alpha):
         # update the alpha of the card
         self.alpha = alpha
-        self.card_background.colour = (*card_background.colour[:3], self.alpha)
+        self.card_background.colour = (*self.card_background.colour[:3], self.alpha)
 
     def on_press(self):
         self.pressed = True
 
     def on_release(self):
         self.pressed = False
-        # plays the card
-        self.present_snap.play_card(self)
+        # toggle self.active on press
+        # if the card is within the play pile area
+        if 280 < self.center_x < 410 and 165 < self.center_y < 341:
+            self.update_alpha(255)
+            self.present_snap.play_card(self)
+        # if the card is within the player's card pile area
+        elif 40 < self.center_x < 170 and 39 < self.center_y < 215:
+            self.active = False if self.active else True
+            if not self.active:
+                self.update_position(105, 127)
+                self.update_alpha(255)
 
 class SnapButton:
     def __init__(self, present_snap, x=0, y=0, width=64, height=64, image=None):
