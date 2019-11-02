@@ -13,7 +13,7 @@ class PresentSnap(Scene):
         self.TEXT_COLOUR = (231,205,182)
         self.CARD_COLOUR = (240,240,240)
 
-        self.images = arcade.load_textures("images/present_snap/present_snap_sprites.png",[
+        images = arcade.load_textures("images/present_snap/present_snap_sprites.png",[
             [0, 0, 128, 128],
             [128, 0, 128, 128],
             [256, 0, 128, 128],
@@ -30,23 +30,24 @@ class PresentSnap(Scene):
             ])
 
         # names of images in order
-        self.images_names = ["Santa Claus", "Candy Cane", "Present", "Stocking", "Christmas Tree", "Holly Leaves", "Christmas Wreath", "Gingerbread Man", "Christmas Candles", "Baubles", "Christmas Pudding", "Snow Globe", "Christmas Robin"]
+        images_names = ["Santa Claus", "Candy Cane", "Present", "Stocking", "Christmas Tree", "Holly Leaves", "Christmas Wreath", "Gingerbread Man", "Christmas Candles", "Baubles", "Christmas Pudding", "Snow Globe", "Christmas Robin"]
 
         # initialise the deck in form [name, image]
-        self.deck = [[self.images_names[i], self.images[i]] for i in range(13)] * 4
+        self.deck = [[images_names[i], images[i]] for i in range(13)] * 4
+        # self.deck = [[images_names[0], images[0]] for i in range(2)]
 
         # the player's decorator deck
-        self.player_pile = BorderRadiusRectangle(102, 127, 125, 175, (240,240,240), 5)
+        self.player_pile = BorderRadiusRectangle(102, 127, 125, 175, self.CARD_COLOUR, 5)
         self.player_separator = BorderRadiusRectangle(47, 127, 11, 175, (25,25,25), 5)
-        self.player_decorator_card = Card(self, 105, 127, 125, 175, colour=(240,240,240))
+        self.player_decorator_card = Card(self, 105, 127, 125, 175, colour=self.CARD_COLOUR)
 
         # the computer's decorator deck
-        self.computer_pile = BorderRadiusRectangle(698, 378, 125, 175, (240,240,240), 5)
+        self.computer_pile = BorderRadiusRectangle(698, 378, 125, 175, self.CARD_COLOUR, 5)
         self.computer_separator = BorderRadiusRectangle(753, 378, 11, 175, (25,25,25), 5)
-        self.computer_decorator_card = Card(self, 695, 378, 125, 175, colour=(240,240,240), angle=180)
+        self.computer_decorator_card = Card(self, 695, 378, 125, 175, colour=self.CARD_COLOUR, angle=180)
 
         # initialise box to show second card
-        self.second_card_box = BorderRadiusRectangle(467, 305, 50, 70, colour=(240,240,240), border_rad=5)
+        self.second_card_box = BorderRadiusRectangle(467, 305, 50, 70, colour=self.CARD_COLOUR, border_rad=5)
         self.empty_second_box = BorderRadiusRectangle(467, 305, 50, 70, colour=(147,91,30), border_rad=5)
 
         # initialise the empty play pile
@@ -58,11 +59,16 @@ class PresentSnap(Scene):
         self.snap_button_texture = arcade.load_texture("images/present_snap/snap_button.png")
         self.snap_button = SnapButton(self, 400, 116, 128, 64, self.snap_button_texture)
 
-    def setup(self):
-        # track turn number
-        self.turn_number = 0
+        # initialise the font
+        self.FONT = "fonts/Courgette-Regular.ttf"
 
+    def setup(self):
+        # track turns
+        self.turn_number = 0
         self.computer_turn_time = 0.8
+
+        # track wins
+        self.winner = None
 
         # track snaps
         self.snap = False
@@ -73,8 +79,8 @@ class PresentSnap(Scene):
         # deal the cards
         self.play_pile = []
         random.shuffle(self.deck)
-        self.player_hand = self.deck[:26]
-        self.computer_hand = self.deck[26:]
+        self.player_hand = self.deck[:len(self.deck) // 2]
+        self.computer_hand = self.deck[len(self.deck) // 2:]
 
         # initialise first card
         self.current_card = Card(self, 105, 127, 125, 175, card_info=self.player_hand[0], colour=self.CARD_COLOUR, face="back")
@@ -83,141 +89,6 @@ class PresentSnap(Scene):
         # initialise the play pile
         self.play_pile = []
 
-    def draw(self):
-        # draw background
-        arcade.draw_texture_rectangle(400, 300, 800, 600, self.background)
-
-        # draw player's decorator deck
-        if len(self.player_hand) > 1:
-            self.player_pile.draw()
-            self.player_separator.draw()
-            self.player_decorator_card.draw()
-
-        # draw computer's decorator deck
-        if len(self.computer_hand) > 1:
-            self.computer_pile.draw()
-            self.computer_separator.draw()
-        if len(self.computer_hand) > 0:
-            self.computer_decorator_card.draw()
-
-        # draw the next card
-        if len(self.player_hand) > 0:
-            self.current_card.draw()
-
-        # draw top card in play pile
-        if len(self.play_pile) > 0:
-            self.play_pile[-1][1].draw()
-        else:
-            # draw empty play pile with description
-            self.empty_play_pile.draw()
-            for i, line in enumerate(self.play_pile_desc):
-                arcade.draw_text(line, 345, 318 - (20 * i), self.TEXT_COLOUR, 13, font_name="fonts/Courgette-Regular.ttf", anchor_x="center")
-
-        # draw second card in play pile
-        if len(self.play_pile) > 1:
-            self.second_card_box.draw()
-            arcade.draw_rectangle_outline(467, 305, 40, 60, color=(220,32,32))
-            arcade.draw_texture_rectangle(467, 296, 40, 40, texture=self.play_pile[-2][0][1])
-        else:
-            # draw empty previous pile
-            self.empty_second_box.draw()
-
-        # label the piles
-        arcade.draw_text("Play Pile", 273, 306, (*self.TEXT_COLOUR, 140), 13, font_name="fonts/Courgette-Regular.ttf", anchor_x="center", anchor_y="center", rotation=90)
-        arcade.draw_text("Previous", 432, 306, (*self.TEXT_COLOUR, 140), 13, font_name="fonts/Courgette-Regular.ttf", anchor_x="center", anchor_y="center", rotation=90)
-
-        # draw number of cards for player and computer
-        arcade.draw_text("Cards: {}".format(len(self.player_hand)), 43, 224, self.TEXT_COLOUR, 13, font_name="fonts/Courgette-Regular.ttf", anchor_x="left")
-        arcade.draw_text("Cards: {}".format(len(self.computer_hand)), 727, 267, self.TEXT_COLOUR, 13, font_name="fonts/Courgette-Regular.ttf", anchor_x="center")
-
-        # tell the player whose turn it is
-        arcade.draw_text( ("Your " if self.turn_number % 2 == 0 else "Computer's ") + "turn",
-                        400, 50, self.TEXT_COLOUR, 20, font_name="fonts/Courgette-Regular.ttf", anchor_x="center")
-
-        # say who won the previous snap
-        if self.snap_winner_timer > 0:
-            arcade.draw_text(("You " if self.snap_history[-1] == "player" else "Computer ") + "got snap!",
-                400, 430, self.TEXT_COLOUR, 16, font_name="fonts/Courgette-Regular.ttf", anchor_x="center")
-
-        # draw snap button
-        if self.snap:
-            self.snap_button.draw()
-
-    def update(self, delta_time):
-        # print(delta_time)
-        # sets time remaining of snap win message
-        if self.snap_winner_timer > 0:
-            self.snap_winner_timer -= delta_time
-
-        # snap detection
-        if len(self.play_pile) > 1 and self.play_pile[-1][0] == self.play_pile[-2][0]:
-            self.snap = True
-
-            # add snap button to button list
-            if self.snap_button not in self.button_list:
-                self.button_list.append(self.snap_button)
-            
-            # random time for computer to get snap
-            if self.snap_timer == None:
-                self.snap_timer = random.uniform(0.7, 1.3)
-            
-            if self.snap_timer <= 0:
-                # computer gets snap
-                print("computer snap")
-                # merge to player's hand and remove from play pile
-                self.computer_hand += [item[0] for item in self.play_pile]
-                self.play_pile = []
-
-                # add to history
-                self.snap_history.append("computer")
-
-                # reset snap status
-                self.reset_snap()
-
-            else:
-                self.snap_timer -= delta_time
-
-        # player turn
-        elif self.turn_number % 2 == 0:
-
-            if len(self.player_hand) > 0 and len(self.computer_hand) > 0:
-                if self.current_card not in self.button_list:
-                    self.button_list.append(self.current_card)
-            else:
-                # someone wins
-                if len(self.player_hand) == 0:
-                    if len(self.computer_hand) == 0:
-                        print("draw")
-                    else:
-                        print("computer wins")
-                else:
-                    print("player wins")
-
-        # computer turn
-        elif self.turn_number % 2 == 1:
-
-            if len(self.computer_hand) > 0 and len(self.player_hand) > 0:
-                # waits before the computer takes its turn
-                if self.computer_turn_time <= 0:
-                    # instantiate card
-                    computer_card = Card(self, 345, 253, 125, 175, card_info=self.computer_hand[0], colour=self.CARD_COLOUR, face="front")
-
-                    # add to play pile
-                    self.play_pile.append([self.computer_hand.pop(0), computer_card])
-
-                    # next turn starts
-                    self.turn_number += 1
-                else:
-                    self.computer_turn_time -= delta_time
-            else:
-                # someone wins
-                if len(self.player_hand) == 0:
-                    if len(self.computer_hand) == 0:
-                        print("draw")
-                    else:
-                        print("computer wins")
-                else:
-                    print("player wins")
 
     def play_card(self, card):
         # show the card
@@ -256,6 +127,170 @@ class PresentSnap(Scene):
         self.snap = False
         self.snap_timer = None
         self.snap_winner_timer = 1.5
+
+
+    def draw(self):
+        # draw background
+        arcade.draw_texture_rectangle(400, 300, 800, 600, self.background)
+
+        # draw player's decorator deck
+        if len(self.player_hand) > 1:
+            self.player_pile.draw()
+            self.player_separator.draw()
+            self.player_decorator_card.draw()
+
+        # draw computer's decorator deck
+        if len(self.computer_hand) > 1:
+            self.computer_pile.draw()
+            self.computer_separator.draw()
+        if len(self.computer_hand) > 0:
+            self.computer_decorator_card.draw()
+
+        # draw the next card
+        if len(self.player_hand) > 0:
+            self.current_card.draw()
+
+        # draw top card in play pile
+        if len(self.play_pile) > 0:
+            self.play_pile[-1][1].draw()
+        else:
+            # draw empty play pile with description
+            self.empty_play_pile.draw()
+            for i, line in enumerate(self.play_pile_desc):
+                arcade.draw_text(line, 345, 318 - (20 * i), self.TEXT_COLOUR, 13, font_name=self.FONT, anchor_x="center")
+
+        # draw second card in play pile
+        if len(self.play_pile) > 1:
+            self.second_card_box.draw()
+            arcade.draw_rectangle_outline(467, 305, 40, 60, color=(220,32,32))
+            arcade.draw_texture_rectangle(467, 296, 40, 40, texture=self.play_pile[-2][0][1])
+        else:
+            # draw empty previous pile
+            self.empty_second_box.draw()
+
+        # label the piles
+        arcade.draw_text("Play Pile", 273, 306, (*self.TEXT_COLOUR, 140), 13, font_name=self.FONT, anchor_x="center", anchor_y="center", rotation=90)
+        arcade.draw_text("Previous", 432, 306, (*self.TEXT_COLOUR, 140), 13, font_name=self.FONT, anchor_x="center", anchor_y="center", rotation=90)
+
+        # draw number of cards for player and computer
+        arcade.draw_text("Cards: {}".format(len(self.player_hand)), 43, 224, self.TEXT_COLOUR, 13, font_name=self.FONT, anchor_x="left")
+        arcade.draw_text("Cards: {}".format(len(self.computer_hand)), 727, 267, self.TEXT_COLOUR, 13, font_name=self.FONT, anchor_x="center")
+
+        # tell the player whose turn it is
+        arcade.draw_text( ("Your " if self.turn_number % 2 == 0 else "Computer's ") + "turn",
+                        400, 50, self.TEXT_COLOUR, 20, font_name=self.FONT, anchor_x="center")
+
+        # say who won the previous snap
+        if self.snap_winner_timer > 0:
+            arcade.draw_text(("You " if self.snap_history[-1] == "player" else "Computer ") + "got snap!",
+                400, 430, self.TEXT_COLOUR, 16, font_name=self.FONT, anchor_x="center")
+
+        # draw snap button
+        if self.snap:
+            self.snap_button.draw()
+
+        # display if the game is done
+        if self.winner:
+            arcade.draw_rectangle_filled(400, 350, 600, 200, (184,184,184))
+            arcade.draw_rectangle_outline(400, 350, 600, 200, (140,140,140), 4)
+            # arcade.draw_text(self.winner, 400, 450, self.TEXT_COLOUR, 18, font_name=self.FONT, anchor_x="center")
+            
+            # player win message
+            if self.winner == "player":
+                title_text = "You Win!"
+                main_text = "Congratulations, you beat the computer."
+
+            # computer win message
+            elif self.winner == "computer":
+                title_text = "You Lose!"
+                main_text = "Oh dear, it seems the computer beat you."
+
+            # draw message
+            else:
+                title_text = "Draw!"
+                main_text = "It seems you both ran out of cards."
+
+            arcade.draw_text(title_text, 400, 400, (0,0,0), 25, font_name=self.FONT, anchor_x="center", anchor_y="center")
+            arcade.draw_text(main_text, 400, 350, (0,0,0), 15, font_name=self.FONT, anchor_x="center", anchor_y="center")
+            arcade.draw_text("Press ESCAPE to quit", 400, 300, (50,50,50), 14, font_name=self.FONT, anchor_x="center", anchor_y="center")
+
+    def update(self, delta_time):
+        # print(delta_time)
+
+        # sets time remaining of the snap win message
+        if self.snap_winner_timer > 0:
+            self.snap_winner_timer -= delta_time
+
+        # snap detection
+        elif len(self.play_pile) > 1 and self.play_pile[-1][0] == self.play_pile[-2][0]:
+            self.snap = True
+
+            # add snap button to button list
+            if self.snap_button not in self.button_list:
+                self.button_list.append(self.snap_button)
+            
+            # random time for computer to get snap
+            if self.snap_timer == None:
+                self.snap_timer = random.uniform(0.7, 1.3)
+            
+            if self.snap_timer <= 0:
+                # computer gets snap
+                print("computer snap")
+                # merge to player's hand and remove from play pile
+                self.computer_hand += [item[0] for item in self.play_pile]
+                self.play_pile = []
+
+                # add to history
+                self.snap_history.append("computer")
+
+                # reset snap status
+                self.reset_snap()
+
+            else:
+                self.snap_timer -= delta_time
+
+        # player turn
+        elif self.turn_number % 2 == 0:
+
+            if len(self.player_hand) > 0 and len(self.computer_hand) > 0:
+                if self.current_card not in self.button_list:
+                    self.button_list.append(self.current_card)
+            else:
+                # someone wins. only happens on your turn
+                if not self.winner:
+                    if len(self.player_hand) == 0:
+                        if len(self.computer_hand) == 0:
+                            self.winner = "draw"
+                        else:
+                            self.winner = "computer"
+                    else:
+                        self.winner = "player"
+
+        # computer turn
+        elif self.turn_number % 2 == 1:
+
+            if len(self.computer_hand) > 0:
+                # waits before the computer takes its turn
+                if self.computer_turn_time <= 0:
+                    # instantiate card
+                    computer_card = Card(self, 345, 253, 125, 175, card_info=self.computer_hand[0], colour=self.CARD_COLOUR, face="front")
+
+                    # add to play pile
+                    self.play_pile.append([self.computer_hand.pop(0), computer_card])
+
+                    # next turn starts
+                    self.turn_number += 1
+                else:
+                    self.computer_turn_time -= delta_time
+
+    # handle key presses
+    def key_press(self, key, modifiers):
+        pass
+
+    def key_release(self, key, modifiers):
+        # exit game wen escape is pressed
+        if key == arcade.key.ESCAPE:
+            self.game.change_game_state("GAME_MENU")
 
 
 class Card:
