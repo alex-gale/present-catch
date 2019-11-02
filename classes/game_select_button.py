@@ -34,11 +34,11 @@ class GameSelectButton:
 
         # initialise text values
         self.title_text = title_text
-        self.desc_test = desc_text
+        self.desc_text = desc_text
 
         # wrap desc_text to fit in the box
         wrapper = textwrap.TextWrapper(width=25)
-        self.desc_text_lines = wrapper.wrap(self.desc_test)
+        self.desc_text_lines = wrapper.wrap(self.desc_text)
 
         self.pressed = False
 

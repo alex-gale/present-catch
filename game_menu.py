@@ -29,3 +29,8 @@ class GameMenu(Scene):
         # draw all the buttons
         for button in self.button_list:
             button.draw()
+
+    def key_release(self, key, modifiers):
+        if key == arcade.key.ESCAPE:
+            # return to the title screen if escape is pressed
+            self.game.change_game_state("TITLE_SCREEN")
