@@ -74,15 +74,23 @@ class Game(arcade.Window):
         present_match = PresentMatch(self)
         self.scenes.append(present_match)
 
+        # setup initial scene
+        self.setup_current_scene()
+
+
+    def setup_current_scene(self):
+        # get the integer value of the current state
+        state_value = self.current_state.value
+
+        # setup the scene
+        self.scenes[state_value].setup()
+
     def change_game_state(self, new_state):
         # switch the state
         self.current_state = GameState[new_state]
-        print(new_state)
 
-        # get the integer value of the current state
-        state_value = self.current_state.value
-        # setup the new scene
-        self.scenes[state_value].setup()
+        # setup the scene
+        self.setup_current_scene()
 
 
     def on_draw(self):
