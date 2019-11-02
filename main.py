@@ -78,51 +78,60 @@ class Game(arcade.Window):
         self.setup_current_scene()
 
 
-    def setup_current_scene(self):
-        # get the integer value of the current state
-        state_value = self.current_state.value
+    def get_current_state_value(self):
+        # return the integer value of the current state
+        return self.current_state.value
 
-        # setup the scene
+    def setup_current_scene(self):
+        # setup the currently loaded scene
+        state_value = self.get_current_state_value()
         self.scenes[state_value].setup()
 
     def change_game_state(self, new_state):
+        # get the old scene's state_value
+        old_state_value = self.get_current_state_value()
+
         # switch the state
         self.current_state = GameState[new_state]
 
         # setup the scene
         self.setup_current_scene()
 
+        # run the unload method for the old scene
+        self.scenes[old_state_value].unload()
+
 
     def on_draw(self):
         ## main game renderer
         arcade.start_render()
 
-        state_value = self.current_state.value
+        # run the draw method for the current scene
+        state_value = self.get_current_state_value()
         self.scenes[state_value].draw()
 
     def on_update(self, delta_time):
         ## run updates to scenes
-        state_value = self.current_state.value
+        state_value = self.get_current_state_value()
         self.scenes[state_value].update(delta_time)
 
     def on_key_press(self, key, modifiers):
         ## send key presses to scenes
-        state_value = self.current_state.value
+        state_value = self.get_current_state_value()
         self.scenes[state_value].key_press(key, modifiers)
 
     def on_key_release(self, key, modifiers):
         ## send key releases to scenes
-        state_value = self.current_state.value
+        state_value = self.get_current_state_value()
         self.scenes[state_value].key_release(key, modifiers)
 
     def on_mouse_press(self, x, y, button, key_modifiers):
         ## check for mouse presses
-        state_value = self.current_state.value
+        state_value = self.get_current_state_value()
         check_mouse_press_for_buttons(x, y, self.scenes[state_value].button_list)
 
     def on_mouse_release(self, x, y, button, key_modifiers):
         ## check for mouse releases
-        state_value = self.current_state.value
+        state_value = self.get_current_state_value()
         check_mouse_release_for_buttons(x, y, self.scenes[state_value].button_list)
 
 def main():

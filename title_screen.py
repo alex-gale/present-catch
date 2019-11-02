@@ -22,9 +22,14 @@ class TitleScreen(Scene):
         self.santa.center_y = -200
 
         # main play button
-        play_button = ChangeGameStateButton(self.game, "GAME_MENU", "images/play_button.png", 550, 300)
-        play_button.alpha = 0
-        self.button_list.append(play_button)
+        self.play_button = ChangeGameStateButton(self.game, "GAME_MENU", "images/play_button.png", 550, 300)
+        self.play_button.alpha = 0
+        self.button_list.append(self.play_button)
+
+    def unload(self):
+        self.logo.alpha = 255
+        self.santa.center_y = 140
+        self.play_button.alpha = 255
 
     def draw(self):
         # draw background

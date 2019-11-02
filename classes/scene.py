@@ -11,6 +11,10 @@ class Scene:
         ## this is run every time the game state is changed to this scene
         pass
 
+    def unload(self):
+        ## this is run every time the game state is changed away from this scene
+        pass
+
     def draw(self):
         ## this is run every time the game is drawn and this is the current scene
         pass
