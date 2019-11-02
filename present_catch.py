@@ -148,7 +148,8 @@ class PresentCatch(Scene):
             arcade.draw_rectangle_filled(self.game.SCREEN_WIDTH * 0.5, self.game.SCREEN_HEIGHT * 0.8, 600, 150, (184, 184, 184))
             arcade.draw_rectangle_outline(self.game.SCREEN_WIDTH * 0.5, self.game.SCREEN_HEIGHT * 0.8, 600, 150, (140, 140, 140), 4)
 
-            if self.score < 20:
+            # different messages depending on scroe
+            if self.score < self.PRESENTS_TO_DROP * 0.8:
                 title_text = "Game Over"
                 main_text = "Christmas is ruined."
             else:
@@ -165,13 +166,6 @@ class PresentCatch(Scene):
         arcade.draw_text(str(self.score), self.game.SCREEN_WIDTH * 0.5, 50, arcade.color.WHITE, 17, anchor_x="center", font_name="fonts/Courgette-Regular.ttf")
 
     def update(self, delta_time):
-        # countdown state
-        if self.game_state == PresentCatchGameState.COUNTDOWN:
-            self.countdown -= delta_time
-            if self.countdown <= 0:
-                self.game_state = PresentCatchGameState.PLAYING
-
-
         if self.game_state == PresentCatchGameState.COUNTDOWN or self.game_state == PresentCatchGameState.PLAYING:
             # move if keys are being pressed and state is countdown or playing
             if arcade.key.RIGHT in self.pressed_keys and arcade.key.LEFT in self.pressed_keys:
@@ -194,8 +188,18 @@ class PresentCatch(Scene):
             else:
                 self.player.change_x = 0
 
+        # if all the presents have been caught, the game is over
+        if self.presents_fallen == self.PRESENTS_TO_DROP:
+            self.game_state = PresentCatchGameState.GAME_OVER
 
-        if self.game_state == PresentCatchGameState.PLAYING:
+        # countdown state
+        if self.game_state == PresentCatchGameState.COUNTDOWN:
+            self.countdown -= delta_time
+            if self.countdown <= 0:
+                self.game_state = PresentCatchGameState.PLAYING
+
+
+        elif self.game_state == PresentCatchGameState.PLAYING:
             # only run collision checks and summon presents if in playing state
             # check for present collisions with player
             player_present_hit_list = arcade.check_for_collision_with_list(self.player, self.present_list)
@@ -223,20 +227,13 @@ class PresentCatch(Scene):
                 self.present_count += 1
                 self.time_since_present = 0
 
-
-        # if all the presents have been caught, the game is over
-        if self.presents_fallen == self.PRESENTS_TO_DROP:
-            self.game_state = PresentCatchGameState.GAME_OVER
-
-
         # game over state
-        if self.game_state == PresentCatchGameState.GAME_OVER:
+        elif self.game_state == PresentCatchGameState.GAME_OVER:
             self.player.change_x = 0
             self.present_list = arcade.SpriteList()
 
             if self.player.action not in [DANCING_1, DANCING_2, DANCING_3]:
                 self.player.action = random.choice([DANCING_1, DANCING_2, DANCING_3])
-
 
         # update the player and their animation state
         self.player.update()
