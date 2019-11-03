@@ -10,7 +10,7 @@ class GameMenu(Scene):
         self.background = arcade.load_texture("images/mountain.jpg")
 
         # initialise each button and add to button_list
-        self.pcatch_button = GameSelectButton(self.game, "PRESENT_CATCH", 60, 450, title_text="Present Catch", desc_text="The original Christmas classic reimagined. Save Christmas by catching the presents being thrown out of a helicopter!")
+        self.pcatch_button = GameSelectButton(self.game, "PRESENT_CATCH", 60, 450, "images/present_catch.jpg", "Present Catch", "The original Christmas classic reimagined. Save Christmas by catching the presents being thrown out of a helicopter!")
         self.button_list.append(self.pcatch_button)
 
         self.psnap_button = GameSelectButton(self.game, "PRESENT_SNAP", 300, 450, title_text="Present Snap", desc_text="Coming soon")
@@ -29,3 +29,8 @@ class GameMenu(Scene):
         # draw all the buttons
         for button in self.button_list:
             button.draw()
+
+    def key_release(self, key, modifiers):
+        if key == arcade.key.ESCAPE:
+            # return to the title screen if escape is pressed
+            self.game.change_game_state("TITLE_SCREEN")
