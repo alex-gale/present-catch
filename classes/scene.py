@@ -30,3 +30,7 @@ class Scene:
     def key_release(self, key, modifier):
         ## this is run whenever a key is released
         pass
+
+    def mouse_movement(self, x, y, dx, dy):
+        ## this is run whenever the mouse is moved
+        pass
