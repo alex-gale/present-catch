@@ -1,6 +1,5 @@
 import arcade, random, textwrap, time
 from classes.scene import Scene
-from classes.shapes import BorderRadiusRectangle
 
 class PresentSnap(Scene):
     def __init__(self, game):
@@ -36,22 +35,19 @@ class PresentSnap(Scene):
         self.deck = [[images_names[i], images[i]] for i in range(13)] * 4
         # self.deck = [[images_names[0], images[0]] for i in range(2)]
 
+        # initialise all card backgrounds
+        self.card_texture = arcade.load_texture("images/present_snap/card.png")
+        self.card_texture_dark = arcade.load_texture("images/present_snap/card_dark.png")
+        self.card_texture_brown = arcade.load_texture("images/present_snap/card_brown.png")
+        self.card_texture_brown_small = arcade.load_texture("images/present_snap/card_brown_small.png")
+
         # the player's decorator deck
-        self.player_pile = BorderRadiusRectangle(102, 127, 125, 175, self.CARD_COLOUR, 5)
-        self.player_separator = BorderRadiusRectangle(47, 127, 11, 175, (25,25,25), 5)
         self.player_decorator_card = Card(self, 105, 127, 125, 175, colour=self.CARD_COLOUR)
 
         # the computer's decorator deck
-        self.computer_pile = BorderRadiusRectangle(698, 378, 125, 175, self.CARD_COLOUR, 5)
-        self.computer_separator = BorderRadiusRectangle(753, 378, 11, 175, (25,25,25), 5)
         self.computer_decorator_card = Card(self, 695, 378, 125, 175, colour=self.CARD_COLOUR, angle=180)
 
-        # initialise box to show second card
-        self.second_card_box = BorderRadiusRectangle(467, 305, 50, 70, colour=self.CARD_COLOUR, border_rad=5)
-        self.empty_second_box = BorderRadiusRectangle(467, 305, 50, 70, colour=(147,91,30), border_rad=5)
-
-        # initialise the empty play pile
-        self.empty_play_pile = BorderRadiusRectangle(345, 253, 125, 175, colour=(147,91,30), border_rad=5)
+        # initialise the empty play pile message
         text_wrapper = textwrap.TextWrapper(width=15)
         self.play_pile_desc = text_wrapper.wrap("This is the play pile.\nPlace cards here to start playing.")
 
@@ -135,14 +131,14 @@ class PresentSnap(Scene):
 
         # draw player's decorator deck
         if len(self.player_hand) > 1:
-            self.player_pile.draw()
-            self.player_separator.draw()
+            arcade.draw_texture_rectangle(102, 127, 125, 175, self.card_texture)
+            arcade.draw_texture_rectangle(104, 127, 125, 175, self.card_texture_dark)
             self.player_decorator_card.draw()
 
         # draw computer's decorator deck
         if len(self.computer_hand) > 1:
-            self.computer_pile.draw()
-            self.computer_separator.draw()
+            arcade.draw_texture_rectangle(698, 378, 125, 175, self.card_texture)
+            arcade.draw_texture_rectangle(696, 378, 125, 175, self.card_texture_dark)
         if len(self.computer_hand) > 0:
             self.computer_decorator_card.draw()
 
@@ -151,18 +147,19 @@ class PresentSnap(Scene):
             self.play_pile[-1][1].draw()
         else:
             # draw empty play pile with description
-            self.empty_play_pile.draw()
+            arcade.draw_texture_rectangle(345, 253, 125, 175, self.card_texture_brown)
             for i, line in enumerate(self.play_pile_desc):
                 arcade.draw_text(line, 345, 318 - (20 * i), self.TEXT_COLOUR, 13, font_name=self.FONT, anchor_x="center")
 
         # draw second card in play pile
         if len(self.play_pile) > 1:
-            self.second_card_box.draw()
+            # self.second_card_box.draw()
+            arcade.draw_texture_rectangle(467, 305, 50, 70, self.card_texture)
             arcade.draw_rectangle_outline(467, 305, 40, 60, color=(220,32,32))
             arcade.draw_texture_rectangle(467, 296, 40, 40, texture=self.play_pile[-2][0][1])
         else:
             # draw empty previous pile
-            self.empty_second_box.draw()
+            arcade.draw_texture_rectangle(467, 305, 50, 70, self.card_texture_brown_small)
 
         # label the piles
         arcade.draw_text("Play Pile", 273, 306, (*self.TEXT_COLOUR, 140), 13, font_name=self.FONT, anchor_x="center", anchor_y="center", rotation=90)
@@ -293,10 +290,17 @@ class PresentSnap(Scene):
             self.game.change_game_state("GAME_MENU")
 
     # handle mouse motion
-    def mouse_movement(self, x, y, dx, dy):
-        if self.current_card.active:
+    # def mouse_movement(self, x, y, dx, dy):
+    #     if self.current_card.active:
+    #         self.current_card.update_position(x, y)
+    #         self.current_card.update_alpha(190)
+
+    def mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        if self.current_card.pressed:
+            if self.current_card.alpha != 190:
+                self.current_card.update_alpha(190)
             self.current_card.update_position(x, y)
-            self.current_card.update_alpha(190)
+            
 
 
 class Card:
@@ -318,15 +322,14 @@ class Card:
 
         self.present_snap = present_snap
         self.face = face
-        self.active = False
 
-        # initialise the card border
-        self.card_background = BorderRadiusRectangle(self.center_x, self.center_y, self.width, self.height, (*self.colour, self.alpha), border_rad=5)
+        # initialise the card textures
+        self.card_texture = arcade.load_texture("images/present_snap/card.png")
         self.card_back = arcade.load_texture("images/present_snap/card_back.png")
 
     def draw(self):
         # render the card
-        self.card_background.draw()
+        arcade.draw_texture_rectangle(self.center_x, self.center_y, self.width, self.height, self.card_texture, alpha=self.alpha, angle=self.angle)
 
         # render either face or back, depending on side visible
         if self.face == "back":
@@ -343,29 +346,27 @@ class Card:
         # update the position of the card
         self.center_x = x
         self.center_y = y
-        self.card_background.update_position(self.center_x, self.center_y)
 
     def update_alpha(self, alpha):
         # update the alpha of the card
         self.alpha = alpha
-        self.card_background.colour = (*self.card_background.colour[:3], self.alpha)
 
     def on_press(self):
         self.pressed = True
 
     def on_release(self):
         self.pressed = False
-        # toggle self.active on press
-        # if the card is within the play pile area
+
+        # plays the card when the player drags it to the play pile
         if 280 < self.center_x < 410 and 165 < self.center_y < 341:
             self.update_alpha(255)
             self.present_snap.play_card(self)
-        # if the card is within the player's card pile area
-        elif 40 < self.center_x < 170 and 39 < self.center_y < 215:
-            self.active = False if self.active else True
-            if not self.active:
-                self.update_position(105, 127)
-                self.update_alpha(255)
+        elif self.center_x == 105 and self.center_y == 127:
+            self.present_snap.play_card(self)
+        else:
+            self.update_position(105, 127)
+            self.update_alpha(255)
+
 
 class SnapButton:
     def __init__(self, present_snap, x=0, y=0, width=64, height=64, image=None):
@@ -386,5 +387,6 @@ class SnapButton:
 
     def on_release(self):
         self.pressed = False
+
         # player gets snap
         self.present_snap.player_snap()
