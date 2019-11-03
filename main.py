@@ -139,6 +139,11 @@ class Game(arcade.Window):
         state_value = self.get_current_state_value()
         self.scenes[state_value].mouse_movement(x, y, dx, dy)
 
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        ## check for mouse drag
+        state_value = self.get_current_state_value()
+        self.scenes[state_value].mouse_drag(x, y, dx, dy, buttons, modifiers)
+
 def main():
     window = Game()
     window.setup()
