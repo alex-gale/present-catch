@@ -219,7 +219,7 @@ class PresentSnap(Scene):
             self.snap_winner_timer -= delta_time
 
         # snap detection
-        elif len(self.play_pile) > 1 and self.play_pile[-1][0] == self.play_pile[-2][0]:
+        if len(self.play_pile) > 1 and self.play_pile[-1][0] == self.play_pile[-2][0]:
             self.snap = True
 
             # add snap button to button list
@@ -270,7 +270,7 @@ class PresentSnap(Scene):
                 # waits before the computer takes its turn
                 if self.computer_turn_time <= 0:
                     # instantiate card
-                    computer_card = Card(self, 345, 253, 125, 175, card_info=self.computer_hand[0], colour=self.CARD_COLOUR, face="front")
+                    computer_card = Card(self, 345, 253, 125, 175, card_info=self.computer_hand[0], colour=self.CARD_COLOUR, face="front", flipped=True)
 
                     # add to play pile
                     self.play_pile.append([self.computer_hand.pop(0), computer_card])
@@ -290,11 +290,6 @@ class PresentSnap(Scene):
             self.game.change_game_state("GAME_MENU")
 
     # handle mouse motion
-    # def mouse_movement(self, x, y, dx, dy):
-    #     if self.current_card.active:
-    #         self.current_card.update_position(x, y)
-    #         self.current_card.update_alpha(190)
-
     def mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if self.current_card.pressed:
             if self.current_card.alpha != 190:
@@ -304,7 +299,7 @@ class PresentSnap(Scene):
 
 
 class Card:
-    def __init__(self, present_snap, x=0, y=0, width=125, height=175, card_info=['', None], colour=(0,0,0), alpha=255, face="back", angle=0):
+    def __init__(self, present_snap, x=0, y=0, width=125, height=175, card_info=['', None], colour=(0,0,0), alpha=255, face="back", angle=0, flipped=False):
         self.center_x = x
         self.center_y = y
         self.width = width
@@ -319,6 +314,12 @@ class Card:
         self.name = text_wrapper.wrap(card_info[0])
         self.image = card_info[1]
 
+        # dimensions of card parts, in form [expected, actual]
+        self.image_dims = [100, 100]
+        self.border_dims = [160, 160]
+
+        # whether the card has yet been flipped over (animation)
+        self.flipped = flipped
 
         self.present_snap = present_snap
         self.face = face
@@ -333,15 +334,15 @@ class Card:
 
         # render either face or back, depending on side visible
         if self.face == "back":
-                arcade.draw_texture_rectangle(self.center_x, self.center_y, 110, 160, self.card_back, alpha=self.alpha, angle=self.angle)
+                arcade.draw_texture_rectangle(self.center_x, self.center_y, 110, self.border_dims[1], self.card_back, alpha=self.alpha, angle=self.angle)
 
         elif self.face == "front":
-            arcade.draw_rectangle_outline(self.center_x, self.center_y, 110, 160, (220,32,32,self.alpha))
-            arcade.draw_texture_rectangle(self.center_x, self.center_y - 24, 100, 100, self.image, alpha=self.alpha, angle=self.angle)
+            arcade.draw_rectangle_outline(self.center_x, self.center_y, 110, self.border_dims[1], (220,32,32,self.alpha))
+            arcade.draw_texture_rectangle(self.center_x, self.center_y - 24, 100, self.image_dims[1], self.image, alpha=self.alpha, angle=self.angle)
 
             for i, line in enumerate(self.name):
                 arcade.draw_text(line, self.center_x, self.center_y + 50 - (15 * i), (220,32,32,self.alpha), 15, font_name="fonts/Courgette-Regular.ttf", anchor_x="center", anchor_y="center")
-    
+
     def update_position(self, x, y):
         # update the position of the card
         self.center_x = x
@@ -361,7 +362,7 @@ class Card:
         if 280 < self.center_x < 410 and 165 < self.center_y < 341:
             self.update_alpha(255)
             self.present_snap.play_card(self)
-        elif self.center_x == 105 and self.center_y == 127:
+        elif self.center_x == 105 and self.center_y == 127 and self.alpha == 255:
             self.present_snap.play_card(self)
         else:
             self.update_position(105, 127)
