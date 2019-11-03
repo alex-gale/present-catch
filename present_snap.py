@@ -311,8 +311,10 @@ class Card:
         self.alpha = alpha
 
         # card [name, image]
-        self.name = card_info[0]
+        text_wrapper = textwrap.TextWrapper(width=11)
+        self.name = text_wrapper.wrap(card_info[0])
         self.image = card_info[1]
+
 
         self.present_snap = present_snap
         self.face = face
@@ -334,6 +336,9 @@ class Card:
             arcade.draw_rectangle_outline(self.center_x, self.center_y, 110, 160, (220,32,32,self.alpha))
             arcade.draw_texture_rectangle(self.center_x, self.center_y - 24, 100, 100, self.image, alpha=self.alpha, angle=self.angle)
 
+            for i, line in enumerate(self.name):
+                arcade.draw_text(line, self.center_x, self.center_y + 50 - (15 * i), (220,32,32,self.alpha), 15, font_name="fonts/Courgette-Regular.ttf", anchor_x="center", anchor_y="center")
+    
     def update_position(self, x, y):
         # update the position of the card
         self.center_x = x
