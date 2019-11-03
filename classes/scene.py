@@ -34,3 +34,7 @@ class Scene:
     def mouse_movement(self, x, y, dx, dy):
         ## this is run whenever the mouse is moved
         pass
+
+    def mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        ## this is run whenever the mouse is clicked and dragged
+        pass
