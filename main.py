@@ -134,6 +134,11 @@ class Game(arcade.Window):
         state_value = self.get_current_state_value()
         check_mouse_release_for_buttons(x, y, self.scenes[state_value].button_list)
 
+    def on_mouse_motion(self, x, y, dx, dy):
+        ## check for mouse movement
+        state_value = self.get_current_state_value()
+        self.scenes[state_value].mouse_movement(x, y, dx, dy)
+
 def main():
     window = Game()
     window.setup()
