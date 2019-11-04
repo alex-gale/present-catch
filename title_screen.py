@@ -1,5 +1,5 @@
-import arcade
-from classes.buttons import ChangeGameStateButton
+import arcade, os
+from classes.buttons import ChangeGameStateButton, ExitButton
 from classes.scene import Scene
 from effects import fade_in, slide_in
 
@@ -11,20 +11,25 @@ class TitleScreen(Scene):
         self.background = arcade.load_texture("images/mountain.jpg")
 
         # initialise present catch logo
-        self.logo = arcade.Sprite("images/logo.png")
+        self.logo = arcade.Sprite("images/title_screen/logo.png")
         self.logo.alpha = 0
         self.logo.center_x = self.game.SCREEN_WIDTH * 0.5
         self.logo.center_y = self.game.SCREEN_HEIGHT * 0.8
 
         # initialise santa sprite
-        self.santa = arcade.Sprite("images/santa.png")
+        self.santa = arcade.Sprite("images/title_screen/santa.png")
         self.santa.center_x = 160
         self.santa.center_y = -200
 
         # main play button
-        self.play_button = ChangeGameStateButton(self.game, "GAME_MENU", "images/play_button.png", 550, 300)
+        self.play_button = ChangeGameStateButton(self.game, "GAME_MENU", "images/title_screen/play_button.png", 550, 300)
         self.play_button.alpha = 0
         self.button_list.append(self.play_button)
+
+        # main exit button
+        self.exit_button = ExitButton("images/title_screen/exit_button.png", 550, 150)
+        self.exit_button.alpha = 0
+        self.button_list.append(self.exit_button)
 
     def unload(self):
         self.logo.alpha = 255

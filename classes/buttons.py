@@ -1,4 +1,4 @@
-import arcade
+import arcade, sys
 
 class ImageButton(arcade.Sprite):
     # plain old image button
@@ -28,3 +28,13 @@ class ChangeGameStateButton(ImageButton):
     def on_release(self):
         self.pressed = False
         self.game.change_game_state(self.gamestate)
+
+
+class ExitButton(ImageButton):
+    # button to exit the game
+    def __init__(self, filename=None, x=0, y=0, scale=1):
+        super().__init__(filename, x, y, scale)
+
+    def on_release(self):
+        sys.exit()
+
