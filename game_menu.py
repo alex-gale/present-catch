@@ -20,8 +20,8 @@ class GameMenu(Scene):
         self.psnap_button = ChangeGameStateButton(self.game, "PRESENT_SNAP", "images/game_menu/present_snap_button.jpg", 400, 250, self.INITIAL_BUTTON_SCALE)
         self.button_list.append(self.psnap_button)
 
-        self.psnap_button = ChangeGameStateButton(self.game, "PRESENT_MATCH", "images/game_menu/present_match_button.jpg", 640, 250, self.INITIAL_BUTTON_SCALE)
-        self.button_list.append(self.psnap_button)
+        self.pmatch_button = ChangeGameStateButton(self.game, "PRESENT_MATCH", "images/game_menu/present_match_button.jpg", 640, 250, self.INITIAL_BUTTON_SCALE)
+        self.button_list.append(self.pmatch_button)
 
     def setup(self):
         for button in self.button_list:
@@ -53,19 +53,21 @@ class GameMenu(Scene):
                 mouse_on = False
 
             # scale and change alpha depending on mouseover state
+            change_speed = 5
+
             if mouse_on:
-                if button.alpha + 5 <= 255:
-                    button.alpha += 5
+                if button.alpha + change_speed <= 255:
+                    button.alpha += change_speed
                     # add the appropriate difference in scale
-                    button.scale += (1 - self.INITIAL_BUTTON_SCALE) / ((255 - self.INITIAL_BUTTON_ALPHA) / 5)
+                    button.scale += (1 - self.INITIAL_BUTTON_SCALE) / ((255 - self.INITIAL_BUTTON_ALPHA) / change_speed)
                 else:
                     button.alpha = 255
                     button.scale = 1
             else:
-                if button.alpha - 5 >= self.INITIAL_BUTTON_ALPHA:
-                    button.alpha -= 5
+                if button.alpha - change_speed >= self.INITIAL_BUTTON_ALPHA:
+                    button.alpha -= change_speed
                     # subtract the appropriate difference in scale
-                    button.scale -= (1 - self.INITIAL_BUTTON_SCALE) / ((255 - self.INITIAL_BUTTON_ALPHA) / 5)
+                    button.scale -= (1 - self.INITIAL_BUTTON_SCALE) / ((255 - self.INITIAL_BUTTON_ALPHA) / change_speed)
                 else:
                     button.alpha = self.INITIAL_BUTTON_ALPHA
                     button.scale = self.INITIAL_BUTTON_SCALE
