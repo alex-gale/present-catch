@@ -19,6 +19,10 @@ class GameMenu(Scene):
         self.pmatch_button = GameSelectButton(self.game, "PRESENT_MATCH", 540, 450, title_text="Present Match", desc_text="Coming soon")
         self.button_list.append(self.pmatch_button)
 
+    def setup(self):
+        for button in self.button_list:
+            button.alpha = button.INITIAL_ALPHA
+
     def draw(self):      
         # draw background
         arcade.draw_texture_rectangle(self.game.SCREEN_WIDTH // 2, self.game.SCREEN_HEIGHT // 2, self.game.SCREEN_WIDTH, self.game.SCREEN_HEIGHT, self.background)
@@ -29,6 +33,29 @@ class GameMenu(Scene):
         # draw all the buttons
         for button in self.button_list:
             button.draw()
+
+    def update(self, delta_time):
+        for button in self.button_list:
+            mouse_on = True
+            if self.game.mouse_x > button.center_x + button.width / 2:
+                mouse_on = False
+            elif self.game.mouse_x < button.center_x - button.width / 2:
+                mouse_on = False
+            elif self.game.mouse_y > button.center_y + button.height / 2:
+                mouse_on = False
+            elif self.game.mouse_y < button.center_y - button.height / 2:
+                mouse_on = False
+
+            if mouse_on:
+                if button.alpha + 5 < 255:
+                    button.change_alpha(5)
+                else:
+                    button.alpha = 255
+            else:
+                if button.alpha - 5 > 180:
+                    button.change_alpha(-5)
+                else:
+                    button.alpha = 180
 
     def key_release(self, key, modifiers):
         if key == arcade.key.ESCAPE:

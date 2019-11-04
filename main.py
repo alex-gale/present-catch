@@ -52,6 +52,10 @@ class Game(arcade.Window):
         # initialise scenes
         self.scenes = []
 
+        # initialise mouse positions
+        self.mouse_x = 0
+        self.mouse_y = 0
+
     def setup(self):
         ## setup scenes
         # 0 = title screen
@@ -136,6 +140,10 @@ class Game(arcade.Window):
 
     def on_mouse_motion(self, x, y, dx, dy):
         ## check for mouse movement
+        self.mouse_x = x
+        self.mouse_y = y
+
+        # send mouse positions to loaded scene
         state_value = self.get_current_state_value()
         self.scenes[state_value].mouse_movement(x, y, dx, dy)
 
