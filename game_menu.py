@@ -1,6 +1,6 @@
 import arcade
 from classes.scene import Scene
-from classes.game_select_button import GameSelectButton
+from classes.buttons import ChangeGameStateButton
 
 class GameMenu(Scene):
     def __init__(self, game):
@@ -10,14 +10,14 @@ class GameMenu(Scene):
         self.background = arcade.load_texture("images/mountain.jpg")
 
         # initialise each button and add to button_list
-        self.pcatch_button = GameSelectButton(self.game, "PRESENT_CATCH", 60, 450, "images/present_catch.jpg", "Present Catch", "The original Christmas classic reimagined. Save Christmas by catching the presents being thrown out of a helicopter!")
+        self.pcatch_button = ChangeGameStateButton(self.game, "PRESENT_CATCH", "images/game_menu/present_catch_button.jpg", 160, 250)
         self.button_list.append(self.pcatch_button)
 
-        self.psnap_button = GameSelectButton(self.game, "PRESENT_SNAP", 300, 450, title_text="Present Snap", desc_text="Coming soon")
+        self.psnap_button = ChangeGameStateButton(self.game, "PRESENT_SNAP", "images/game_menu/present_snap_button.jpg", 400, 250)
         self.button_list.append(self.psnap_button)
 
-        self.pmatch_button = GameSelectButton(self.game, "PRESENT_MATCH", 540, 450, title_text="Present Match", desc_text="Coming soon")
-        self.button_list.append(self.pmatch_button)
+        self.psnap_button = ChangeGameStateButton(self.game, "PRESENT_MATCH", "images/game_menu/present_match_button.jpg", 640, 250)
+        self.button_list.append(self.psnap_button)
 
     def setup(self):
         for button in self.button_list:
@@ -45,17 +45,6 @@ class GameMenu(Scene):
                 mouse_on = False
             elif self.game.mouse_y < button.center_y - button.height / 2:
                 mouse_on = False
-
-            if mouse_on:
-                if button.alpha + 5 < 255:
-                    button.change_alpha(5)
-                else:
-                    button.alpha = 255
-            else:
-                if button.alpha - 5 > 180:
-                    button.change_alpha(-5)
-                else:
-                    button.alpha = 180
 
     def key_release(self, key, modifiers):
         if key == arcade.key.ESCAPE:
