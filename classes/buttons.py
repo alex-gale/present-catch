@@ -2,9 +2,9 @@ import arcade
 
 class ImageButton(arcade.Sprite):
     # plain old image button
-    def __init__(self, filename=None, x=0, y=0):
+    def __init__(self, filename=None, x=0, y=0, scale=1):
         ## initialise parent class (sprite)
-        super().__init__(filename, center_x=x, center_y=y)
+        super().__init__(filename, center_x=x, center_y=y, scale=scale)
 
         self.pressed = False
 
@@ -19,8 +19,8 @@ class ImageButton(arcade.Sprite):
 
 class ChangeGameStateButton(ImageButton):
     # button to change the game state. requires access to the game class
-    def __init__(self, game, gamestate, filename=None, x=0, y=0):
-        super().__init__(filename, x, y)
+    def __init__(self, game, gamestate, filename=None, x=0, y=0, scale=1):
+        super().__init__(filename, x, y, scale)
 
         self.game = game
         self.gamestate = gamestate
