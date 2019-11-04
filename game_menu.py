@@ -1,6 +1,6 @@
 import arcade
 from classes.scene import Scene
-from classes.game_select_button import GameSelectButton
+from classes.buttons import ChangeGameStateButton
 
 class GameMenu(Scene):
     def __init__(self, game):
@@ -9,15 +9,24 @@ class GameMenu(Scene):
         # initialise background
         self.background = arcade.load_texture("images/mountain.jpg")
 
+        # initial alpha and scale for buttons
+        self.INITIAL_BUTTON_ALPHA = 200
+        self.INITIAL_BUTTON_SCALE = 0.975
+
         # initialise each button and add to button_list
-        self.pcatch_button = GameSelectButton(self.game, "PRESENT_CATCH", 60, 450, "images/present_catch.jpg", "Present Catch", "The original Christmas classic reimagined. Save Christmas by catching the presents being thrown out of a helicopter!")
+        self.pcatch_button = ChangeGameStateButton(self.game, "PRESENT_CATCH", "images/game_menu/present_catch_button.jpg", 160, 250, self.INITIAL_BUTTON_SCALE)
         self.button_list.append(self.pcatch_button)
 
-        self.psnap_button = GameSelectButton(self.game, "PRESENT_SNAP", 300, 450, title_text="Present Snap", desc_text="Coming soon")
+        self.psnap_button = ChangeGameStateButton(self.game, "PRESENT_SNAP", "images/game_menu/present_snap_button.jpg", 400, 250, self.INITIAL_BUTTON_SCALE)
         self.button_list.append(self.psnap_button)
 
-        self.pmatch_button = GameSelectButton(self.game, "PRESENT_MATCH", 540, 450, title_text="Present Match", desc_text="Coming soon")
+        self.pmatch_button = ChangeGameStateButton(self.game, "PRESENT_MATCH", "images/game_menu/present_match_button.jpg", 640, 250, self.INITIAL_BUTTON_SCALE)
         self.button_list.append(self.pmatch_button)
+
+    def setup(self):
+        for button in self.button_list:
+            button.alpha = self.INITIAL_BUTTON_ALPHA
+            button.scale = self.INITIAL_BUTTON_SCALE
 
     def draw(self):      
         # draw background
@@ -29,6 +38,39 @@ class GameMenu(Scene):
         # draw all the buttons
         for button in self.button_list:
             button.draw()
+
+    def update(self, delta_time):
+        for button in self.button_list:
+            # detect if the button is moused over
+            mouse_on = True
+            if self.game.mouse_x > button.center_x + button.width / 2:
+                mouse_on = False
+            elif self.game.mouse_x < button.center_x - button.width / 2:
+                mouse_on = False
+            elif self.game.mouse_y > button.center_y + button.height / 2:
+                mouse_on = False
+            elif self.game.mouse_y < button.center_y - button.height / 2:
+                mouse_on = False
+
+            # scale and change alpha depending on mouseover state
+            change_speed = 5
+
+            if mouse_on:
+                if button.alpha + change_speed <= 255:
+                    button.alpha += change_speed
+                    # add the appropriate difference in scale
+                    button.scale += (1 - self.INITIAL_BUTTON_SCALE) / ((255 - self.INITIAL_BUTTON_ALPHA) / change_speed)
+                else:
+                    button.alpha = 255
+                    button.scale = 1
+            else:
+                if button.alpha - change_speed >= self.INITIAL_BUTTON_ALPHA:
+                    button.alpha -= change_speed
+                    # subtract the appropriate difference in scale
+                    button.scale -= (1 - self.INITIAL_BUTTON_SCALE) / ((255 - self.INITIAL_BUTTON_ALPHA) / change_speed)
+                else:
+                    button.alpha = self.INITIAL_BUTTON_ALPHA
+                    button.scale = self.INITIAL_BUTTON_SCALE
 
     def key_release(self, key, modifiers):
         if key == arcade.key.ESCAPE:
