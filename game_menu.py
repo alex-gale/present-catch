@@ -10,7 +10,7 @@ class GameMenu(Scene):
         self.background = arcade.load_texture("images/mountain.jpg")
 
         # initial alpha and scale for buttons
-        self.INITIAL_BUTTON_ALPHA = 180
+        self.INITIAL_BUTTON_ALPHA = 200
         self.INITIAL_BUTTON_SCALE = 0.975
 
         # initialise each button and add to button_list
