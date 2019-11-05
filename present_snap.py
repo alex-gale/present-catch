@@ -10,9 +10,8 @@ class PresentSnap(Scene):
 
         # set colours
         self.TEXT_COLOUR = (231,205,182)
-        self.CARD_COLOUR = (240,240,240)
 
-        images = arcade.load_textures("images/present_snap/present_snap_sprites.png",[
+        self.images = arcade.load_textures("images/present_snap/present_snap_sprites.png", [
             [0, 0, 128, 128],
             [128, 0, 128, 128],
             [256, 0, 128, 128],
@@ -29,11 +28,21 @@ class PresentSnap(Scene):
             ])
 
         # names of images in order
-        images_names = ["Santa Claus", "Candy Cane", "Present", "Stocking", "Christmas Tree", "Holly Leaves", "Christmas Wreath", "Gingerbread Man", "Christmas Candles", "Baubles", "Christmas Pudding", "Snow Globe", "Christmas Robin"]
-
-        # initialise the deck in form [name, image]
-        self.deck = [[images_names[i], images[i]] for i in range(13)] * 4
-        # self.deck = [[images_names[0], images[0]] for i in range(2)]
+        self.images_names = [
+            "Santa Claus",
+            "Candy Cane",
+            "Present",
+            "Stocking",
+            "Christmas Tree",
+            "Holly Leaves",
+            "Christmas Wreath",
+            "Gingerbread Man",
+            "Christmas Candles",
+            "Baubles",
+            "Christmas Pudding",
+            "Snow Globe",
+            "Christmas Robin"
+            ]
 
         # initialise all card backgrounds
         self.card_texture = arcade.load_texture("images/present_snap/card.png")
@@ -42,10 +51,10 @@ class PresentSnap(Scene):
         self.card_texture_brown_small = arcade.load_texture("images/present_snap/card_brown_small.png")
 
         # the player's decorator deck
-        self.player_decorator_card = Card(self, 105, 127, 125, 175, colour=self.CARD_COLOUR)
+        self.player_decorator_card = Card(self, 105, 127, 125, 175)
 
         # the computer's decorator deck
-        self.computer_decorator_card = Card(self, 695, 378, 125, 175, colour=self.CARD_COLOUR, angle=180)
+        self.computer_decorator_card = Card(self, 695, 378, 125, 175, angle=180)
 
         # initialise the empty play pile message
         text_wrapper = textwrap.TextWrapper(width=15)
@@ -72,6 +81,9 @@ class PresentSnap(Scene):
         self.snap_timer = None
         self.snap_winner_timer = 0
 
+        # initialise the unshuffled deck in form [name, image]
+        self.deck = [[self.images_names[i], self.images[i]] for i in range(13)] * 4
+
         # deal the cards
         self.play_pile = []
         random.shuffle(self.deck)
@@ -79,7 +91,7 @@ class PresentSnap(Scene):
         self.computer_hand = self.deck[len(self.deck) // 2:]
 
         # initialise first card
-        self.current_card = Card(self, 105, 127, 125, 175, card_info=self.player_hand[0], colour=self.CARD_COLOUR, face="back")
+        self.current_card = Card(self, 105, 127, 125, 175, card_info=self.player_hand[0], face="back")
         self.button_list.append(self.current_card)
 
         # initialise the play pile
@@ -99,14 +111,13 @@ class PresentSnap(Scene):
 
         # instantiate next card
         if len(self.player_hand) > 0:
-            self.current_card = Card(self, 105, 127, 125, 175, card_info=self.player_hand[0], colour=self.CARD_COLOUR, face="back")
+            self.current_card = Card(self, 105, 127, 125, 175, card_info=self.player_hand[0], face="back")
 
         # next turn starts
         self.computer_turn_time = 0.8
         self.turn_number += 1
 
     def player_snap(self):
-        print("player snap")
         # merge to player's hand and remove from play pile
         self.player_hand += [item[0] for item in self.play_pile]
         self.play_pile = []
@@ -212,8 +223,6 @@ class PresentSnap(Scene):
             arcade.draw_text("Press ESCAPE to quit", 400, 300, (50,50,50), 14, font_name=self.FONT, anchor_x="center", anchor_y="center")
 
     def update(self, delta_time):
-        # print(delta_time)
-
         # sets time remaining of the snap win message
         if self.snap_winner_timer > 0:
             self.snap_winner_timer -= delta_time
@@ -232,7 +241,6 @@ class PresentSnap(Scene):
             
             if self.snap_timer <= 0:
                 # computer gets snap
-                print("computer snap")
                 # merge to player's hand and remove from play pile
                 self.computer_hand += [item[0] for item in self.play_pile]
                 self.play_pile = []
@@ -270,7 +278,7 @@ class PresentSnap(Scene):
                 # waits before the computer takes its turn
                 if self.computer_turn_time <= 0:
                     # instantiate card
-                    computer_card = Card(self, 345, 253, 125, 175, card_info=self.computer_hand[0], colour=self.CARD_COLOUR, face="front", flipped=True)
+                    computer_card = Card(self, 345, 253, 125, 175, card_info=self.computer_hand[0], face="front")
 
                     # add to play pile
                     self.play_pile.append([self.computer_hand.pop(0), computer_card])
@@ -279,6 +287,11 @@ class PresentSnap(Scene):
                     self.turn_number += 1
                 else:
                     self.computer_turn_time -= delta_time
+
+    def unload(self):
+        # unloads the snap button if the game is quit while snap is detected
+        if self.snap:
+            self.reset_snap()
 
     # handle key presses
     def key_press(self, key, modifiers):
@@ -299,29 +312,23 @@ class PresentSnap(Scene):
 
 
 class Card:
-    def __init__(self, present_snap, x=0, y=0, width=125, height=175, card_info=['', None], colour=(0,0,0), alpha=255, face="back", angle=0, flipped=False):
+    def __init__(self, present_snap, x=0, y=0, width=125, height=175, card_info=['', None], alpha=255, face="back", angle=0):
         self.center_x = x
         self.center_y = y
         self.width = width
         self.height = height
         self.angle = angle
 
-        self.colour = colour
         self.alpha = alpha
 
-        # card [name, image]
+        self.present_snap = present_snap
+
+        # card information [name, image]
         text_wrapper = textwrap.TextWrapper(width=11)
         self.name = text_wrapper.wrap(card_info[0])
         self.image = card_info[1]
 
-        # dimensions of card parts, in form [expected, actual]
-        self.image_dims = [100, 100]
-        self.border_dims = [160, 160]
-
-        # whether the card has yet been flipped over (animation)
-        self.flipped = flipped
-
-        self.present_snap = present_snap
+        # set the current texture of the card
         self.face = face
 
         # initialise the card textures
@@ -334,11 +341,11 @@ class Card:
 
         # render either face or back, depending on side visible
         if self.face == "back":
-                arcade.draw_texture_rectangle(self.center_x, self.center_y, 110, self.border_dims[1], self.card_back, alpha=self.alpha, angle=self.angle)
+                arcade.draw_texture_rectangle(self.center_x, self.center_y, 110, 160, self.card_back, alpha=self.alpha, angle=self.angle)
 
         elif self.face == "front":
-            arcade.draw_rectangle_outline(self.center_x, self.center_y, 110, self.border_dims[1], (220,32,32,self.alpha))
-            arcade.draw_texture_rectangle(self.center_x, self.center_y - 24, 100, self.image_dims[1], self.image, alpha=self.alpha, angle=self.angle)
+            arcade.draw_rectangle_outline(self.center_x, self.center_y, 110, 160, (220,32,32,self.alpha))
+            arcade.draw_texture_rectangle(self.center_x, self.center_y - 24, 100, 100, self.image, alpha=self.alpha, angle=self.angle)
 
             for i, line in enumerate(self.name):
                 arcade.draw_text(line, self.center_x, self.center_y + 50 - (15 * i), (220,32,32,self.alpha), 15, font_name="fonts/Courgette-Regular.ttf", anchor_x="center", anchor_y="center")
