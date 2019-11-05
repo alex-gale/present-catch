@@ -70,7 +70,9 @@ class PresentSnap(Scene):
     def setup(self):
         # track turns
         self.turn_number = 0
-        self.computer_turn_time = 0.8
+
+        self.computer_card = None
+        self.computer_turn_time = None
 
         # track wins
         self.winner = None
@@ -193,6 +195,10 @@ class PresentSnap(Scene):
         if self.snap:
             self.snap_button.draw()
 
+        # draw the computer's card
+        if self.computer_turn_time is not None:
+            self.computer_card.draw()
+
         # draw the next card
         if len(self.player_hand) > 0:
             self.current_card.draw()
@@ -276,20 +282,61 @@ class PresentSnap(Scene):
 
             if len(self.computer_hand) > 0:
                 # waits before the computer takes its turn
-                if self.computer_turn_time <= 0:
-                    # instantiate card
-                    computer_card = Card(self, 345, 253, 125, 175, card_info=self.computer_hand[0], face="front")
 
-                    # add to play pile
-                    self.play_pile.append([self.computer_hand.pop(0), computer_card])
+                if self.computer_card is None:
+                    self.computer_card = Card(self, 695, 378, card_info=self.computer_hand[0], angle=180)
+                    self.computer_turn_time = 0.6
 
-                    # next turn starts
-                    self.turn_number += 1
                 else:
                     self.computer_turn_time -= delta_time
+                    if self.computer_card.center_x > 345 and self.computer_card.center_y > 253:
+                        self.computer_card.center_x -= (self.computer_card.center_x - 345) / (self.computer_turn_time / delta_time)
+                        self.computer_card.center_y -= (self.computer_card.center_y - 253) / (self.computer_turn_time / delta_time)
+                        self.computer_card.alpha = 190
+
+                    if self.computer_card.center_x == 345 and self.computer_card.center_y == 253:
+                        if self.computer_turn_time <= 0:
+                            if self.computer_card.alpha > 150:
+                                self.computer_turn_time = 0.25
+
+                        self.computer_turn_time -= delta_time
+                        self.computer_card.alpha -= self.computer_card.alpha / (self.computer_turn_time / delta_time)
+
+                        if round(self.computer_turn_time, 1) == 0:
+                            # play the card
+                            self.computer_card.alpha = 0
+                            self.computer_turn_time = None
+
+                            self.computer_card.height = 175
+                            self.computer_card.width = 125
+                            self.computer_card.alpha = 255
+                            self.computer_card.face = "front"
+                            self.computer_card.angle = 0
+
+                            self.play_pile.append([self.computer_hand.pop(0), self.computer_card])
+                            self.computer_card = None
+                            self.computer_turn_time = None
+
+                            self.turn_number += 1
+
+                    elif self.computer_card.center_x < 345 or self.computer_card.center_y < 253:
+                        self.computer_card.center_x = 345
+                        self.computer_card.center_y = 253
+
+                # if self.computer_turn_time <= 0:
+                #     # instantiate card
+                #     computer_card = Card(self, 695, 378, 125, 175, card_info=self.computer_hand[0])
+
+                #     # add to play pile
+                #     self.play_pile.append([self.computer_hand.pop(0), computer_card])
+
+                #     # next turn starts
+                #     self.turn_number += 1
+                # else:
+                #     self.computer_turn_time -= delta_time
 
     def unload(self):
-        # unloads the snap button if the game is quit while snap is detected
+        # unloads the snap button if the game is quit while a snap is detected
         if self.snap:
             self.reset_snap()
 
@@ -341,7 +388,7 @@ class Card:
 
         # render either face or back, depending on side visible
         if self.face == "back":
-                arcade.draw_texture_rectangle(self.center_x, self.center_y, 110, 160, self.card_back, alpha=self.alpha, angle=self.angle)
+                arcade.draw_texture_rectangle(self.center_x, self.center_y, round(self.width - (2 * self.width / 17.86)), self.height - (2 * self.height / 25), self.card_back, alpha=self.alpha, angle=self.angle)
 
         elif self.face == "front":
             arcade.draw_rectangle_outline(self.center_x, self.center_y, 110, 160, (220,32,32,self.alpha))
