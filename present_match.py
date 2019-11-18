@@ -44,6 +44,7 @@ class PresentMatch(Scene):
                 sprite.FRAMES_PER_UPDATE = belt["speed"]
 
         self.add_item_to_conveyor(0)
+        self.add_item_to_conveyor(1)
 
     def add_item_to_conveyor(self, conveyor_id):
         # get the conveyor and its top y value
@@ -61,20 +62,45 @@ class PresentMatch(Scene):
 
         # add the item to the relevant conveyor belt
         self.conveyor_belts[conveyor_id]["items"].append(item)
+        # add the item to button list for click detection
+        self.button_list.append(item)
+
+    def remove_item(self, item):
+        # remove the item from the game
+        item.remove_from_sprite_lists()
+        self.button_list.remove(item)
 
     def draw(self):
-        # draw all the conveyor belts and their items
+        # draw all the conveyor belts
         for belt in self.conveyor_belts:
-            belt["items"].draw()
             belt["sprites"].draw()
 
+        # draw all the conveyor items
+        for belt in self.conveyor_belts:
+            belt["items"].draw()
+            print(len(belt["items"]))
+
     def update(self, delta_time):
-        # update item positions and animation state in each belt
+        # update items and animation state in each belt
         for belt in self.conveyor_belts:
             for item in belt["items"]:
                 # 6 is is the number of pixels moved each frame of conveyor animation
-                item.center_x += 6 / belt["speed"] * belt["direction"]
+                item.update_x(6 / belt["speed"] * belt["direction"] * item.on_belt)
 
+                # drop item if it has been taken off the belt and released
+                if item.on_belt == 0 and not item.pressed:
+                    item.change_y -= 9 * delta_time
+                    item.center_y += item.change_y
+
+                # remove the item if it is off the screen
+                if item.center_y + (item.height / 2) < 0:
+                    self.remove_item(item)
+                # only remove horizontally if it has travelled the right distance (so it isn't destroyed at the start)
+                if item.distance_travelled > 800:
+                    if item.center_x - (item.width / 2) > 800 or item.center_x + (item.width / 2) < 0:
+                        self.remove_item(item)
+
+            # continue animation of conveyor belt sprite
             belt["sprites"].update_animation(delta_time)
 
     def key_release(self, key, modifiers):
@@ -82,6 +108,15 @@ class PresentMatch(Scene):
             # return to the game menu if escape is pressed
             self.game.change_game_state("GAME_MENU")
 
+    def mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        # detect if item on conveyor belt is being dragged
+        for belt in self.conveyor_belts:
+            for item in belt["items"]:
+                if item.pressed:
+                    # remove item from belt and set position to mouse
+                    item.on_belt = 0
+                    item.center_x = x
+                    item.center_y = y
 
 class ConveyorBelt(arcade.Sprite):
     def __init__(self, mirrored=False):
@@ -112,3 +147,23 @@ class ConveyorBelt(arcade.Sprite):
 class ConveyorItem(arcade.Sprite):
     def __init__(self, filename=None):
         super().__init__(filename)
+
+        self.pressed = False
+        # if the item is on the belt
+        self.on_belt = 1
+        # the total distance the item has travelled while on the belt
+        self.distance_travelled = 0
+
+    def on_press(self):
+        self.pressed = True
+
+        # reset y change when clicked
+        self.change_y = 0
+
+    def on_release(self):
+        self.pressed = False
+
+    def update_x(self, diff):
+        # move the sprite and update the distance travelled
+        self.center_x += diff
+        self.distance_travelled += abs(diff)
