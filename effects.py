@@ -15,3 +15,11 @@ def slide_in(sprite, speed, finish_height):
         sprite.center_y += speed
         if sprite.center_y > finish_height:
         	sprite.center_y = finish_height
+
+def turn_animation(sprite, speed=1, increase = True):
+    sprite.height += speed if increase else -speed
+
+    if sprite.height < 0:
+        sprite.height = 0
+    elif sprite.height > sprite.texture.height:
+        sprite.height = sprite.texture.height
